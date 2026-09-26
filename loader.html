@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>noir.py</title>
+<style>
+html,body{height:100%;margin:0}
+body{background:#000;color:#9d9da7;font:13px/1.6 "JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;display:flex;align-items:center;justify-content:center}
+#box{max-width:440px;padding:0 24px;text-align:center}
+#dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ffe873;margin-right:9px;vertical-align:1px;animation:p 1s ease-in-out infinite alternate}
+@keyframes p{to{opacity:.2}}
+.err #dot{display:none}
+button{color:#9d9da7;background:none;border:1px solid #26262b;border-radius:6px;padding:6px 16px;font:inherit;cursor:pointer;margin-top:14px}
+button:hover{color:#e8e8ec;border-color:#3d3d44}
+</style>
+</head>
+<body>
+<div id="box"><span id="dot"></span><span id="msg">loading noir.py…</span></div>
+<script>
+/* noir.py loader — pulls the latest editor build from github and replaces
+   this page with it. keep this file, share this file. set REPO if you fork. */
+var REPO = "Toluwer/noir-py";        /* owner/repo on github */
+var FILE = "python-editor.html";
+
+var SOURCES = [
+  "https://raw.githubusercontent.com/" + REPO + "/main/" + FILE,
+  "https://cdn.jsdelivr.net/gh/" + REPO + "@main/" + FILE,
+  "https://cdn.statically.io/gh/" + REPO + "/main/" + FILE,
+  FILE                                  /* last resort: editor next to loader */
+];
+
+function dead(){
+  document.body.className = "err";
+  document.getElementById("msg").innerHTML =
+    "couldn't load noir.py from " + REPO + ".<br>check the connection, then " +
+    '<button onclick="location.reload()">retry</button>';
+}
+
+function grab(url){
+  var c = new AbortController();
+  var t = setTimeout(function(){ c.abort(); }, 20000);
+  function live(){ clearTimeout(t); }
+  return fetch(url, { cache: "no-cache", signal: c.signal })
+    .then(function(r){ return r.ok ? r.text() : Promise.reject(r.status); })
+    .then(function(html){
+      live();
+      /* sanity: it must look like the editor, not a 404 page or a redirect */
+      if (html.length < 5000 || !/^<!doctype html/i.test(html) || html.indexOf('id="app"') < 0) throw 0;
+      document.open();
+      document.write(html);
+      document.close();
+    })
+    .catch(live);
+}
+
+(async function(){
+  for (var i = 0; i < SOURCES.length; i++){
+    await grab(SOURCES[i]);
+    if (document.getElementById("app")) return;   /* the editor took over */
+  }
+  dead();
+})();
+</script>
+</body>
+</html>

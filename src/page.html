@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
+<title>noir.py — Python Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>html{background:#000}body{visibility:hidden}</style>
+<noscript><style>body{visibility:visible!important}</style></noscript>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="noirPyB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4B8BBE"/><stop offset="1" stop-color="#306998"/></linearGradient>
+  <linearGradient id="noirPyY" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE873"/><stop offset="1" stop-color="#FFC331"/></linearGradient>
+</defs></svg>
+
+<div id="app">
+
+  <header id="topbar">
+    <div class="tb-left">
+      <button id="btn-sidebar" class="icon-btn" title="Toggle Sidebar (Ctrl+B)" data-ic="panelLeft"></button>
+      <button id="btn-console" class="icon-btn" title="Toggle Console (Ctrl+J)" data-ic="panelBottom"></button>
+      <div class="tb-div"></div>
+      <div class="brand">
+        <span class="brand-name">noir<span>.py</span></span>
+      </div>
+      <div class="tb-div"></div>
+      <button id="btn-open" class="icon-btn" title="Open File (Ctrl+O)" data-ic="folderOpen"></button>
+      <button id="btn-download" class="icon-btn" title="Download File (Ctrl+Shift+S)" data-ic="download"></button>
+      <button id="btn-share" class="icon-btn" title="Copy Share Link" data-ic="link"></button>
+    </div>
+
+    <div class="tb-right">
+      <button id="btn-palette" class="pal-chip" title="Command Palette (Ctrl+K)">
+        <span data-ic="command"></span>
+        <kbd data-kbd="Mod K">Ctrl K</kbd>
+      </button>
+      <div class="tb-div"></div>
+      <button id="btn-run" disabled title="Run File">
+        <span id="run-ic" class="run-ic" data-ic="play"></span>
+        <span id="run-label">Run</span>
+      </button>
+    </div>
+  </header>
+
+  <div id="main">
+
+    <div id="sb-zone">
+    <nav id="rail" aria-label="Views">
+      <button id="rail-files" class="rail-btn active" title="Explorer" data-ic="fileCode"></button>
+      <button id="rail-search" class="rail-btn" title="Search Across Files (Ctrl+Shift+F)" data-ic="search"></button>
+      <button id="rail-vars" class="rail-btn" title="Variables (After A Run)" data-ic="activity"></button>
+      <button id="rail-plots" class="rail-btn" title="Plots (Matplotlib Figures)" data-ic="chart"></button>
+      <button id="rail-hist" class="rail-btn" title="File History" data-ic="history"></button>
+    </nav>
+
+    <aside id="sidebar">
+      <div class="sb-head">
+        <span class="micro" id="sb-title">Explorer</span>
+        <button id="btn-newfile" class="icon-btn sm" title="New File" data-ic="plus"></button>
+      </div>
+      <div id="file-list"></div>
+
+      <div id="view-search" hidden>
+        <div class="sv-block">
+          <div class="sr-row">
+            <button id="sr-case" class="sr-tog" title="Match Case" type="button">Aa</button>
+            <button id="sr-rex" class="sr-tog" title="Regular Expression" type="button">.*</button>
+            <input id="sr-q" placeholder="Search All Files" spellcheck="false" autocomplete="off">
+          </div>
+          <div class="sr-row sub">
+            <button id="sr-all" class="sr-mini" title="Replace All In Every File" type="button">All</button>
+            <input id="sr-r" placeholder="Replace" spellcheck="false" autocomplete="off">
+          </div>
+        </div>
+        <div id="sr-results"></div>
+      </div>
+
+      <div id="view-vars" hidden>
+        <div class="sv-block vv-head">
+          <span class="micro">Session Variables</span>
+          <button id="vv-refresh" class="icon-btn sm" title="Refresh" data-ic="rotate"></button>
+        </div>
+        <div id="vv-list"></div>
+      </div>
+
+      <div id="view-plots" hidden>
+        <div class="sv-block vv-head">
+          <span class="micro">Plots</span>
+          <button id="pv-clear" class="icon-btn sm" title="Clear Plots" data-ic="trash"></button>
+        </div>
+        <div id="pv-list"></div>
+      </div>
+
+      <div id="view-hist" hidden>
+        <div class="sv-block vv-head">
+          <span class="micro">History</span>
+          <span class="micro" id="hv-name"></span>
+        </div>
+        <div id="hv-list"></div>
+      </div>
+    </aside>
+    </div>
+
+    <div id="editor-pane">
+      <div id="tabbar"><div id="tabs"></div><button id="btn-newtab" class="icon-btn sm" title="New File" data-ic="plus"></button></div>
+
+      <div id="editor-host">
+        <div id="editor"></div>
+        <div id="diffwrap" hidden>
+          <div class="dw-head">
+            <div class="dw-title"><span data-ic="history"></span><span id="dw-label">History</span></div>
+            <div class="dw-actions">
+              <button id="dw-restore" class="dw-btn" type="button" title="Replace The Current File With This Snapshot">Restore</button>
+              <button id="dw-close" class="icon-btn sm" title="Close (Esc)" data-ic="x"></button>
+            </div>
+          </div>
+          <div id="diff-host"></div>
+        </div>
+        <div id="plotwrap" hidden>
+          <div class="dw-head">
+            <div class="dw-title"><span data-ic="chart"></span><span id="pw-label">Figure</span></div>
+            <div class="dw-actions">
+              <button id="pw-prev" class="icon-btn sm" title="Previous Figure" data-ic="chevLeft"></button>
+              <button id="pw-next" class="icon-btn sm" title="Next Figure" data-ic="chevRight"></button>
+              <button id="pw-size" class="icon-btn sm" title="Toggle Actual Size" data-ic="zoomIn"></button>
+              <button id="pw-dl" class="dw-btn" type="button">Download</button>
+              <button id="pw-close" class="icon-btn sm" title="Close (Esc)" data-ic="x"></button>
+            </div>
+          </div>
+          <div id="pw-body"><img id="pw-img" alt="Matplotlib Figure" draggable="false"></div>
+        </div>
+        <div id="empty-state" hidden>
+          <span data-ic="fileCode"></span>
+          <div class="es-title">No File Open</div>
+          <div class="es-sub">Create A File To Start Coding</div>
+          <button id="es-new" class="es-btn"><span data-ic="plus"></span>New File</button>
+          <div class="es-hints"><kbd data-kbd="Mod K">Ctrl K</kbd><span>Command Palette</span><span class="es-dot"></span><span>Drop A .py File To Open</span></div>
+        </div>
+      </div>
+
+      <div id="console-zone">
+        <div id="console-grip" title="Drag To Resize — Double-Click To Hide"></div>
+        <section id="console">
+          <div class="con-head">
+            <div class="con-title"><span data-ic="terminal"></span><span>Console</span></div>
+            <div class="con-actions">
+              <button id="btn-restart" class="icon-btn sm" title="Restart Runtime (Clears Variables)" data-ic="rotate"></button>
+              <button id="btn-clear" class="icon-btn sm" title="Clear Console (Ctrl+L)" data-ic="eraser"></button>
+              <button id="btn-concollapse" class="icon-btn sm" title="Hide Console (Ctrl+J)" data-ic="chevDown"></button>
+            </div>
+          </div>
+          <div id="con-body">
+            <div id="lines">
+              <div id="con-empty" class="line dim">No Output Yet</div>
+            </div>
+            <div id="repl-row" hidden>
+              <span class="repl-p">&gt;&gt;&gt;</span>
+              <input id="repl-field" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Python Console">
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+  </div>
+
+  <footer id="statusbar">
+    <div id="st-left">
+      <span id="st-spin" class="spin-wrap" data-ic="spinner"></span>
+      <span id="st-text">Loading Runtime…</span>
+    </div>
+    <div id="st-right">
+      <button class="st-btn" id="st-ai" title="Ghost Text — Inline Suggestions">AI: Local</button><span class="st-sep st-ai-sep"></span>
+      <button class="st-btn st-prob" id="st-prob" hidden title="Problems — F8 Next, Shift+F8 Previous"><span class="sp-ic err" data-ic="circleX"></span><span id="sp-n-err">0</span><span class="sp-ic warn" data-ic="triangle"></span><span id="sp-n-warn">0</span></button>
+      <span class="st-sep"></span>
+      <button class="st-btn" id="st-pos" title="Go To Line &amp; Column">Ln 1, Col 1</button>
+      <span class="st-sep"></span>
+      <button class="st-btn" id="st-spaces" title="Switch Indentation">Spaces: 4</button>
+      <button class="st-btn" id="st-eol" title="Switch Line Endings">LF</button>
+      <span class="st-btn st-static" title="File Encoding">UTF-8</span>
+      <button class="st-btn" id="st-font" title="Reset Font Size">13.5 px</button>
+      <span class="st-sep"></span>
+      <button class="st-btn" id="st-py" hidden title="Python Version">Python</button>
+    </div>
+  </footer>
+
+</div>
+
+<div id="palette" hidden>
+  <div class="pal-box">
+    <div class="pal-input-row">
+      <span data-ic="search"></span>
+      <input id="pal-field" placeholder="Search Files — > Commands · @ Symbols · # Snippets" spellcheck="false" autocomplete="off">
+    </div>
+    <div id="pal-list"></div>
+    <div class="pal-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd>Navigate</span>
+      <span><kbd>↵</kbd>Open</span>
+      <span><kbd>Esc</kbd>Close</span>
+    </div>
+  </div>
+</div>
+
+<div id="ai-modal" hidden>
+  <div class="aim-box" role="dialog" aria-label="Ghost Text Settings">
+    <div class="aim-head">
+      <span data-ic="wand"></span>
+      <span>Ghost Text</span>
+      <button id="ai-x" class="icon-btn sm" title="Close (Esc)" data-ic="x"></button>
+    </div>
+    <div class="aim-body">
+      <div class="aim-label">Completion Source</div>
+      <div class="aim-modes">
+        <button class="aim-mode" type="button" data-mode="local">
+          <span class="am-t">Local Engine</span>
+          <span class="am-s">Offline Pattern Mining — Free, Instant, Always On</span>
+        </button>
+        <button class="aim-mode" type="button" data-mode="ollama">
+          <span class="am-t">Ollama — Local LLM</span>
+          <span class="am-s">Free · Needs Ollama Running On This Machine</span>
+        </button>
+        <button class="aim-mode" type="button" data-mode="off">
+          <span class="am-t">Off</span>
+          <span class="am-s">Disable Ghost Text Everywhere</span>
+        </button>
+      </div>
+      <div class="aim-ollama">
+        <div class="aim-row"><label>URL</label><input id="ai-url" spellcheck="false" autocomplete="off" placeholder="http://localhost:11434"></div>
+        <div class="aim-row"><label>Model</label><input id="ai-model" spellcheck="false" autocomplete="off" placeholder="qwen2.5-coder:1.5b"></div>
+        <div class="aim-test">
+          <button id="ai-test" class="dw-btn" type="button">Test Connection</button>
+          <span id="ai-status" class="aim-status"></span>
+        </div>
+      </div>
+      <div class="aim-hint"><kbd>Tab</kbd><span>Accept Suggestion</span><span class="aim-dot"></span><span>Keep Typing To Dismiss</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<input type="file" id="file-pick" accept=".py,.txt" hidden>
+
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.5/full/pyodide.js"></script>
+<script>
+/* noir.py self-extracting pack — the app (css + js, minified) is embedded below as one
+   deflate-raw + base64url payload; this bootstrap inflates it, injects the stylesheet
+   and evaluates the app. Everything is still here — just stored compressed. */
+'use strict';
+const NOIR_PACK = '/*__NOIR_PACK__*/';
+(async () => {
+  const show = () => { document.body.style.visibility = 'visible'; };
+  try {
+    let s = NOIR_PACK.replace(/-/g, '+').replace(/_/g, '/');
+    const bin = atob(s + '='.repeat((4 - s.length % 4) % 4));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) { bytes[i] = bin.charCodeAt(i); }
+    const ds = new DecompressionStream('deflate-raw');
+    const w = ds.writable.getWriter();
+    w.write(bytes);
+    w.close();
+    const pack = JSON.parse(new TextDecoder().decode(await new Response(ds.readable).arrayBuffer()));
+    const st = document.createElement('style');
+    st.textContent = pack.c;
+    document.head.appendChild(st);
+    (0, eval)(pack.j);
+    show();
+  } catch (e) {
+    show();
+    document.body.innerHTML = '<pre style="color:#f14c4c;font:12px/1.6 monospace;padding:16px;margin:0">noir.py failed to unpack: ' + (e && e.message || e) + '</pre>';
+  }
+})();
+</script>
+</body>
+</html>

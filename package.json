@@ -1,0 +1,12 @@
+{
+  "name": "noir-py",
+  "version": "13.0.0",
+  "private": true,
+  "description": "a python editor that lives in one html file",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}
