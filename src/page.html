@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f6f5f1">
 <title>noir.py — Python Editor</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-<style>html{background:#000}body{visibility:hidden}</style>
+<style>html{background:#f5f4ef}html[data-theme=ink]{background:#191713}body{visibility:hidden}</style>
+<script>/* early theme — set before first paint so dark users never get a paper flash */
+try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.theme==='ink')document.documentElement.dataset.theme='ink'}catch(e){}
+</script>
 <noscript><style>body{visibility:visible!important}</style></noscript>
 </head>
 <body>
@@ -172,10 +172,11 @@
 
   <footer id="statusbar">
     <div id="st-left">
-      <span id="st-spin" class="spin-wrap" data-ic="spinner"></span>
+      <span id="st-spin" class="spin-wrap"><i></i><i></i><i></i></span>
       <span id="st-text">Loading Runtime…</span>
     </div>
     <div id="st-right">
+      <button class="st-btn" id="st-theme" title="Theme — Paper / Ink">Paper</button><span class="st-sep"></span>
       <button class="st-btn" id="st-ai" title="Ghost Text — Inline Suggestions">AI: Local</button><span class="st-sep st-ai-sep"></span>
       <button class="st-btn st-prob" id="st-prob" hidden title="Problems — F8 Next, Shift+F8 Previous"><span class="sp-ic err" data-ic="circleX"></span><span id="sp-n-err">0</span><span class="sp-ic warn" data-ic="triangle"></span><span id="sp-n-warn">0</span></button>
       <span class="st-sep"></span>

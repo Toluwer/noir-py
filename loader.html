@@ -7,17 +7,21 @@
 <title>noir.py</title>
 <style>
 html,body{height:100%;margin:0}
-body{background:#000;color:#9d9da7;font:13px/1.6 "JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;display:flex;align-items:center;justify-content:center}
+body{background:#f5f4ef;color:#4a4a48;font:13px/1.6 ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:-.005em;display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased}
 #box{max-width:440px;padding:0 24px;text-align:center}
-#dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ffe873;margin-right:9px;vertical-align:1px;animation:p 1s ease-in-out infinite alternate}
-@keyframes p{to{opacity:.2}}
-.err #dot{display:none}
-button{color:#9d9da7;background:none;border:1px solid #26262b;border-radius:6px;padding:6px 16px;font:inherit;cursor:pointer;margin-top:14px}
-button:hover{color:#e8e8ec;border-color:#3d3d44}
+#dots{display:inline-flex;gap:4px;margin-right:10px;vertical-align:1px}
+#dots i{width:5px;height:5px;border-radius:50%;background:#161616;animation:p 1.4s ease-in-out infinite}
+#dots i:nth-child(2){animation-delay:.2s}
+#dots i:nth-child(3){animation-delay:.4s}
+@keyframes p{0%,100%{opacity:.2;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}
+@media (prefers-reduced-motion:reduce){#dots i{animation:none}}
+.err #dots{display:none}
+button{color:#4a4a48;background:#fff;border:1px solid #c8c2ad;border-radius:9px;padding:7px 18px;font:500 12.5px inherit;letter-spacing:0;cursor:pointer;margin-top:14px}
+button:hover{color:#161616;background:#faf9f5}
 </style>
 </head>
 <body>
-<div id="box"><span id="dot"></span><span id="msg">loading noir.py…</span></div>
+<div id="box"><span id="dots"><i></i><i></i><i></i></span><span id="msg">loading noir.py…</span></div>
 <script>
 /* noir.py loader — pulls the latest editor build from github and replaces
    this page with it. keep this file, share this file. set REPO if you fork. */

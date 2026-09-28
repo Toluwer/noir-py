@@ -32,7 +32,9 @@ it after that). everything else is just the file.
 - multi-file: tabs, explorer, search & replace across everything that's open
 - variables view, matplotlib plots, per-file save history with diff + restore
 - command palette (ctrl+k), linting, black formatting (shift+alt+f)
-- pure black, quiet, keyboard-first
+- two themes, both quiet: paper (warm off-white light) and ink (warm dark).
+  switch from the status bar or the palette; it remembers
+- system fonts only, warm neutrals, keyboard-first
 
 ## building from source
 

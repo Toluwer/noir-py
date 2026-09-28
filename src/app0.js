@@ -5,6 +5,7 @@
 
 const MONACO_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs';
 const PYODIDE_BASE = 'https://cdn.jsdelivr.net/pyodide/v0.29.5/full/';
+const MONO_FONT = "ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace";
 const PYODIDE_VERSION = '0.29.5';
 const WS_KEY = 'noir.py:workspace';
 const PREF_KEY = 'noir.py:prefs';
@@ -29,7 +30,7 @@ const app = $('app'), fileListEl = $('file-list'), tabsEl = $('tabs'), tabbarEl 
       plotWrap = $('plotwrap'), pwImg = $('pw-img'), pwLabel = $('pw-label'), pwBody = $('pw-body'), pwPrev = $('pw-prev'), pwNext = $('pw-next'), pwSize = $('pw-size'),
       stProb = $('st-prob'), spErr = $('sp-n-err'), spWarn = $('sp-n-warn'),
       diffWrap = $('diffwrap'), diffHost = $('diff-host'), dwLabel = $('dw-label'),
-      stAi = $('st-ai'), aiModal = $('ai-modal'), aiUrl = $('ai-url'), aiModel = $('ai-model'), aiStatus = $('ai-status'),
+      stAi = $('st-ai'), stTheme = $('st-theme'), aiModal = $('ai-modal'), aiUrl = $('ai-url'), aiModel = $('ai-model'), aiStatus = $('ai-status'),
       aiTestBtn = $('ai-test');
 
 /* ---------- icon set (lucide-style, consistent 2px strokes) ---------- */
@@ -40,6 +41,7 @@ const ICONS = {
   panelBottom: SV('<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 15h18"/>'),
   play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5.3v13.4c0 .8.9 1.3 1.6.9l11-6.7c.7-.4.7-1.4 0-1.8l-11-6.7c-.7-.4-1.6.1-1.6.9z"/></svg>',
   spinner: '<svg class="ic-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-opacity=".22"/><path d="M21 12a9 9 0 0 0-9-9" stroke-linecap="round"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>',
   plus: SV('<path d="M12 5v14M5 12h14"/>'),
   x: SV('<path d="M6 6l12 12M18 6L6 18"/>'),
   trash: SV('<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>'),
@@ -115,7 +117,7 @@ const S = {
   pyReady: false,
   monacoReady: false,
   view: 'files',
-  prefs: { sidebar: true, console: true, conH: 240, fontSize: 13.5, minimap: false, wordWrap: false, hist: [],
+  prefs: { sidebar: true, console: true, conH: 240, fontSize: 13.5, minimap: false, wordWrap: false, hist: [], theme: 'paper',
            ai: { mode: 'local', url: 'http://localhost:11434', model: 'qwen2.5-coder:1.5b' } },
   openLine: null,
   lastHeadTime: null,
@@ -431,6 +433,7 @@ function editorMenu(x, y){
     { label: 'Find In Files', icon: 'search', kbd: MOD + ' ⇧ F', fn: openSearch },
     { sep: true },
     { label: 'Ghost Text Settings…', icon: 'wand', fn: openAIModal },
+    { label: 'Toggle Dark Mode', icon: 'moon', fn: toggleTheme },
     { label: 'Command Palette…', icon: 'command', kbd: MOD + ' K', fn: () => openPalette('>') }
   ]);
 }
@@ -597,6 +600,23 @@ function loadWS(){
 
 function loadPrefs(){ try { Object.assign(S.prefs, JSON.parse(localStorage.getItem(PREF_KEY) || '{}')); } catch (e) {} }
 function savePrefs(){ try { localStorage.setItem(PREF_KEY, JSON.stringify(S.prefs)); } catch (e) {} }
+
+/* ---------- theme: paper (light) / ink (dark) ---------- */
+function applyTheme(t, save){
+  S.prefs.theme = t === 'ink' ? 'ink' : 'paper';
+  const dark = S.prefs.theme === 'ink';
+  document.documentElement.dataset.theme = S.prefs.theme;
+  document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute('content', dark ? '#191713' : '#f6f5f1');
+  if (stTheme) stTheme.textContent = dark ? 'Ink' : 'Paper';
+  try { if (window.monaco && monaco.editor && monaco.editor.setTheme) monaco.editor.setTheme(dark ? 'ink' : 'paper'); } catch (e) {}
+  if (save !== false) savePrefs();
+}
+function toggleTheme(){
+  applyTheme(S.prefs.theme === 'ink' ? 'paper' : 'ink');
+  toast(S.prefs.theme === 'ink' ? 'Dark Mode — Ink' : 'Light Mode — Paper');
+}
 
 /* ---------- file operations ---------- */
 
@@ -1436,6 +1456,7 @@ const COMMANDS = [
   { label: 'Next Problem', kbd: 'F8', icon: 'chevDown', fn: () => nextProblem(false) },
   { label: 'Install Package…', icon: 'box', fn: () => openPalette('install ') },
   { label: 'Ghost Text Settings…', icon: 'wand', fn: () => openAIModal() },
+  { label: 'Toggle Dark Mode', icon: 'moon', fn: toggleTheme },
   { label: 'Clear Console', kbd: MOD + ' L', icon: 'eraser', fn: () => clearConsole() },
   { label: 'Copy Console Output', icon: 'copy', fn: () => copyOutput() },
   { label: 'Restart Runtime', icon: 'rotate', fn: () => restartRuntime() },
@@ -1520,8 +1541,9 @@ function renderPal(){
       if (m) palItems.push({ label: sn.l, icon: 'insert', kbd: 'Snippet', hl: m.idxs.filter(i => i < sn.l.length), fn: () => insertSnippetAtCursor(sn) });
     }
   } else if (isCmd){
+    const sq = raw.slice(1).trim();
     for (const c of COMMANDS){
-      const m = fuzzy(q, c.label);
+      const m = fuzzy(sq, c.label);
       if (m) palItems.push({ label: c.label, icon: c.icon, kbd: c.kbd, hl: m.idxs, fn: c.fn });
     }
   } else {
@@ -2040,8 +2062,8 @@ function openDiff(f, snap){
   diffWrap.hidden = false;
   if (!diffEd){
     diffEd = monaco.editor.createDiffEditor(diffHost, {
-      theme: 'noir', automaticLayout: true, readOnly: true,
-      fontFamily: "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace",
+      theme: S.prefs.theme === 'ink' ? 'ink' : 'paper', automaticLayout: true, readOnly: true,
+      fontFamily: MONO_FONT,
       fontSize: S.prefs.fontSize, lineHeight: 22, fontLigatures: true,
       renderSideBySide: true, scrollBeyondLastLine: false,
       minimap: { enabled: false }, overviewRulerLanes: 0, hideCursorInOverviewRuler: true,
@@ -2333,6 +2355,7 @@ function openAIModal(){
 function closeAIModal(){ aiModal.hidden = true; if (editor) editor.focus(); }
 
 stAi.addEventListener('click', openAIModal);
+stTheme.addEventListener('click', toggleTheme);
 $('ai-x').addEventListener('click', closeAIModal);
 aiModal.addEventListener('mousedown', e => { if (e.target === aiModal) closeAIModal(); });
 for (const b of aiModal.querySelectorAll('.aim-mode')){
@@ -2400,81 +2423,151 @@ require(['vs/editor/editor.main'], async function(){
   const KEYWORDS = PYBLOB.kw, SNIPPETS = PYBLOB.sn, FALLBACK_MODULES = PYBLOB.fm, FALLBACK_NAMES = PYBLOB.fn;
   SNIPS = SNIPPETS;
 
-  monaco.editor.defineTheme('noir', {
+  /* paper & ink — syntax colors stay inside the palette: ink + green + amber, muted comments */
+  monaco.editor.defineTheme('paper', {
+    base: 'vs',
+    inherit: true,
+    rules: [
+      { token: '', foreground: '161616' },
+      { token: 'comment', foreground: '86857e', fontStyle: 'italic' },
+      { token: 'keyword', foreground: '161616', fontStyle: 'bold' },
+      { token: 'annotation', foreground: '9a6b1f' },
+      { token: 'type.identifier', foreground: '2f7d4f' },
+      { token: 'support.function', foreground: '4a4a48' },
+      { token: 'string', foreground: '2f7d4f' },
+      { token: 'string.double', foreground: '2f7d4f' },
+      { token: 'string.single', foreground: '2f7d4f' },
+      { token: 'string.escape', foreground: '9a6b1f' },
+      { token: 'number', foreground: '9a6b1f' },
+      { token: 'delimiter', foreground: '86857e' },
+      { token: 'identifier', foreground: '161616' }
+    ],
+    colors: {
+      'editor.background': '#ffffff',
+      'editor.foreground': '#161616',
+      'editorLineNumber.foreground': '#c4c0b2',
+      'editorLineNumber.activeForeground': '#4a4a48',
+      'editorCursor.foreground': '#161616',
+      'editor.selectionBackground': '#e6e2d3',
+      'editor.inactiveSelectionBackground': '#efede4',
+      'editor.selectionHighlightBackground': '#f0eee3',
+      'editor.lineHighlightBackground': '#faf9f5',
+      'editorIndentGuide.background': '#f0ede1',
+      'editorIndentGuide.background1': '#f0ede1',
+      'editorIndentGuide.activeBackground': '#d9d4c2',
+      'editorIndentGuide.activeBackground1': '#d9d4c2',
+      'editorWidget.background': '#ffffff',
+      'editorGhostText.foreground': '#b5b3aa',
+      'editorWidget.border': '#c8c2ad',
+      'editorSuggestWidget.background': '#ffffff',
+      'editorSuggestWidget.border': '#c8c2ad',
+      'editorSuggestWidget.foreground': '#161616',
+      'editorSuggestWidget.detailForeground': '#86857e',
+      'editorSuggestWidget.documentationForeground': '#4a4a48',
+      'editorSuggestWidget.selectedBackground': '#e8f1ea',
+      'editorSuggestWidget.hoverBackground': '#faf9f5',
+      'editorHoverWidget.background': '#ffffff',
+      'editorHoverWidget.border': '#c8c2ad',
+      'editorHoverWidget.foreground': '#4a4a48',
+      'parameterHintsWidget.background': '#ffffff',
+      'parameterHintsWidget.border': '#c8c2ad',
+      'editorBracketMatch.background': '#f4ecdc',
+      'editorBracketMatch.border': '#c8c2ad',
+      'editor.findMatchBackground': '#f0dfb4',
+      'editor.findMatchHighlightBackground': '#f7f0dd',
+      'diffEditor.insertedTextBackground': '#2f7d4f1c',
+      'diffEditor.removedTextBackground': '#b3403a16',
+      'diffEditor.insertedLineBackground': '#e8f1ea80',
+      'diffEditor.removedLineBackground': '#f6ebe980',
+      'diffEditor.border': '#ece9df',
+      'scrollbarSlider.background': '#e6e1d2',
+      'scrollbarSlider.hoverBackground': '#d6d1bf',
+      'scrollbarSlider.activeBackground': '#c8c2ad',
+      'editorOverviewRuler.border': '#ffffff',
+      'editorGutter.background': '#ffffff',
+      'menu.background': '#ffffff',
+      'menu.foreground': '#161616',
+      'menu.border': '#c8c2ad',
+      'menu.selectionBackground': '#e8f1ea',
+      'menu.selectionForeground': '#161616',
+      'widget.shadow': '#c8c2ad66'
+    }
+  });
+  monaco.editor.defineTheme('ink', {
     base: 'vs-dark',
     inherit: true,
     rules: [
-      { token: '', foreground: 'd4d4d4' },
-      { token: 'comment', foreground: '565b66', fontStyle: 'italic' },
-      { token: 'keyword', foreground: 'bb9af7' },
-      { token: 'annotation', foreground: 'e0af68' },
-      { token: 'type.identifier', foreground: '2ac3de' },
-      { token: 'support.function', foreground: '7aa2f7' },
-      { token: 'string', foreground: '9ece6a' },
-      { token: 'string.double', foreground: '9ece6a' },
-      { token: 'string.single', foreground: '9ece6a' },
-      { token: 'string.escape', foreground: '89ddff' },
-      { token: 'number', foreground: 'ff9e64' },
-      { token: 'delimiter', foreground: '666e7a' },
-      { token: 'identifier', foreground: 'd4d4d4' }
+      { token: '', foreground: 'ece7dc' },
+      { token: 'comment', foreground: '6e675a', fontStyle: 'italic' },
+      { token: 'keyword', foreground: 'ece7dc', fontStyle: 'bold' },
+      { token: 'annotation', foreground: 'c99e5a' },
+      { token: 'type.identifier', foreground: '8fc9a4' },
+      { token: 'support.function', foreground: 'b3aca0' },
+      { token: 'string', foreground: '8fc9a4' },
+      { token: 'string.double', foreground: '8fc9a4' },
+      { token: 'string.single', foreground: '8fc9a4' },
+      { token: 'string.escape', foreground: 'c99e5a' },
+      { token: 'number', foreground: 'c99e5a' },
+      { token: 'delimiter', foreground: '877f70' },
+      { token: 'identifier', foreground: 'ece7dc' }
     ],
     colors: {
-      'editor.background': '#000000',
-      'editor.foreground': '#d4d4d4',
-      'editorLineNumber.foreground': '#565660',
-      'editorLineNumber.activeForeground': '#a6a6ae',
-      'editorCursor.foreground': '#ffffff',
-      'editor.selectionBackground': '#242429',
-      'editor.inactiveSelectionBackground': '#1a1a1e',
-      'editor.selectionHighlightBackground': '#1c1c20',
-      'editor.lineHighlightBackground': '#111116',
-      'editorIndentGuide.background': '#16161a',
-      'editorIndentGuide.background1': '#16161a',
-      'editorIndentGuide.activeBackground': '#2c2c33',
-      'editorIndentGuide.activeBackground1': '#2c2c33',
-      'editorWidget.background': '#0a0a0d',
-      'editorGhostText.foreground': '#41414b',
-      'editorWidget.border': '#2a2a32',
-      'editorSuggestWidget.background': '#0a0a0d',
-      'editorSuggestWidget.border': '#2a2a32',
-      'editorSuggestWidget.foreground': '#c8c8cd',
-      'editorSuggestWidget.detailForeground': '#7c7c86',
-      'editorSuggestWidget.documentationForeground': '#9a9aa4',
-      'editorSuggestWidget.selectedBackground': '#17171d',
-      'editorSuggestWidget.hoverBackground': '#141419',
-      'editorHoverWidget.background': '#0a0a0d',
-      'editorHoverWidget.border': '#2a2a32',
-      'editorHoverWidget.foreground': '#b4b4ba',
-      'parameterHintsWidget.background': '#0a0a0d',
-      'parameterHintsWidget.border': '#2a2a32',
-      'editorBracketMatch.background': '#15151a',
-      'editorBracketMatch.border': '#3a3a44',
-      'editor.findMatchBackground': '#3a5f9e',
-      'editor.findMatchHighlightBackground': '#20344d',
-      'diffEditor.insertedTextBackground': '#2e9e5e2e',
-      'diffEditor.removedTextBackground': '#e06c752e',
-      'diffEditor.insertedLineBackground': '#12351f70',
-      'diffEditor.removedLineBackground': '#3a1d1f70',
-      'diffEditor.border': '#1c1c22',
-      'scrollbarSlider.background': '#1c1c21',
-      'scrollbarSlider.hoverBackground': '#2a2a31',
-      'scrollbarSlider.activeBackground': '#33333c',
-      'editorOverviewRuler.border': '#000000',
-      'editorGutter.background': '#000000',
-      'menu.background': '#0a0a0d',
-      'menu.foreground': '#c8c8cd',
-      'menu.border': '#2a2a32',
-      'menu.selectionBackground': '#17171d',
-      'menu.selectionForeground': '#ffffff',
-      'widget.shadow': '#000000'
+      'editor.background': '#201d18',
+      'editor.foreground': '#ece7dc',
+      'editorLineNumber.foreground': '#5f594c',
+      'editorLineNumber.activeForeground': '#b3aca0',
+      'editorCursor.foreground': '#ece7dc',
+      'editor.selectionBackground': '#34302a',
+      'editor.inactiveSelectionBackground': '#2b2721',
+      'editor.selectionHighlightBackground': '#2f2b24',
+      'editor.lineHighlightBackground': '#26231d',
+      'editorIndentGuide.background': '#2b2820',
+      'editorIndentGuide.background1': '#2b2820',
+      'editorIndentGuide.activeBackground': '#454035',
+      'editorIndentGuide.activeBackground1': '#454035',
+      'editorWidget.background': '#26231e',
+      'editorGhostText.foreground': '#6e675a',
+      'editorWidget.border': '#4a4437',
+      'editorSuggestWidget.background': '#26231e',
+      'editorSuggestWidget.border': '#4a4437',
+      'editorSuggestWidget.foreground': '#ece7dc',
+      'editorSuggestWidget.detailForeground': '#877f70',
+      'editorSuggestWidget.documentationForeground': '#b3aca0',
+      'editorSuggestWidget.selectedBackground': '#2c3a30',
+      'editorSuggestWidget.hoverBackground': '#2b2822',
+      'editorHoverWidget.background': '#26231e',
+      'editorHoverWidget.border': '#4a4437',
+      'editorHoverWidget.foreground': '#b3aca0',
+      'parameterHintsWidget.background': '#26231e',
+      'parameterHintsWidget.border': '#4a4437',
+      'editorBracketMatch.background': '#383324',
+      'editorBracketMatch.border': '#57513f',
+      'editor.findMatchBackground': '#6b5426',
+      'editor.findMatchHighlightBackground': '#473d22',
+      'diffEditor.insertedTextBackground': '#8fc9a41c',
+      'diffEditor.removedTextBackground': '#d2918916',
+      'diffEditor.insertedLineBackground': '#24352b80',
+      'diffEditor.removedLineBackground': '#3a2a2680',
+      'diffEditor.border': '#332f27',
+      'scrollbarSlider.background': '#35322a',
+      'scrollbarSlider.hoverBackground': '#45413a',
+      'scrollbarSlider.activeBackground': '#57513f',
+      'editorOverviewRuler.border': '#201d18',
+      'editorGutter.background': '#201d18',
+      'menu.background': '#26231e',
+      'menu.foreground': '#ece7dc',
+      'menu.border': '#4a4437',
+      'menu.selectionBackground': '#2c3a30',
+      'menu.selectionForeground': '#ece7dc',
+      'widget.shadow': '#000000aa'
     }
   });
 
   editor = monaco.editor.create($('editor'), {
     model: null,
-    theme: 'noir',
+    theme: S.prefs.theme === 'ink' ? 'ink' : 'paper',
     automaticLayout: true,
-    fontFamily: "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace",
+    fontFamily: MONO_FONT,
     fontSize: S.prefs.fontSize,
     lineHeight: 22,
     fontLigatures: true,
@@ -3022,6 +3115,7 @@ async function initPyodide(){
 /* ---------- boot ---------- */
 
 loadPrefs();
+applyTheme(S.prefs.theme, false);
 if (!S.prefs.ai || !S.prefs.ai.mode) S.prefs.ai = { mode: 'local', url: 'http://localhost:11434', model: 'qwen2.5-coder:1.5b' };
 refreshAIChip();
 app.classList.toggle('no-sidebar', !S.prefs.sidebar);
