@@ -23,27 +23,28 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
 
   <header id="topbar">
     <div class="tb-left">
-      <button id="btn-sidebar" class="icon-btn" title="Toggle Sidebar (Ctrl+B)" data-ic="panelLeft"></button>
-      <button id="btn-console" class="icon-btn" title="Toggle Console (Ctrl+J)" data-ic="panelBottom"></button>
-      <div class="tb-div"></div>
+      <button id="btn-sidebar" class="icon-btn" title="Toggle Sidebar" data-ic="panelLeft"></button>
       <div class="brand">
         <span class="brand-name">noir<span>.py</span></span>
       </div>
-      <div class="tb-div"></div>
-      <button id="btn-open" class="icon-btn" title="Open File (Ctrl+O)" data-ic="folderOpen"></button>
-      <button id="btn-download" class="icon-btn" title="Download File (Ctrl+Shift+S)" data-ic="download"></button>
-      <button id="btn-share" class="icon-btn" title="Copy Share Link" data-ic="link"></button>
+      <nav id="menubar" aria-label="Menu Bar">
+        <button class="menu-btn" data-menu="file" aria-haspopup="menu">File</button>
+        <button class="menu-btn" data-menu="edit" aria-haspopup="menu">Edit</button>
+        <button class="menu-btn" data-menu="view" aria-haspopup="menu">View</button>
+        <button class="menu-btn" data-menu="run" aria-haspopup="menu">Run</button>
+        <button class="menu-btn" data-menu="tools" aria-haspopup="menu">Tools</button>
+        <button class="menu-btn" data-menu="help" aria-haspopup="menu">Help</button>
+      </nav>
     </div>
 
     <div class="tb-right">
-      <button id="btn-palette" class="pal-chip" title="Command Palette (Ctrl+K)">
-        <span data-ic="command"></span>
-        <kbd data-kbd="Mod K">Ctrl K</kbd>
-      </button>
+      <button id="btn-console" class="icon-btn" title="Toggle Console" data-ic="panelBottom"></button>
       <div class="tb-div"></div>
+      <button id="btn-palette" class="pal-chip" title="Command Palette">
+        <span data-ic="command"></span>
+      </button>
       <button id="btn-run" disabled title="Run File">
-        <span id="run-ic" class="run-ic" data-ic="play"></span>
-        <span id="run-label">Run</span>
+        <span id="run-ic" class="run-ic" data-ic="playLine"></span>
       </button>
     </div>
   </header>
@@ -140,7 +141,7 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
           <div class="es-title">No File Open</div>
           <div class="es-sub">Create A File To Start Coding</div>
           <button id="es-new" class="es-btn"><span data-ic="plus"></span>New File</button>
-          <div class="es-hints"><kbd data-kbd="Mod K">Ctrl K</kbd><span>Command Palette</span><span class="es-dot"></span><span>Drop A .py File To Open</span></div>
+          <div class="es-hints"><span>Command Palette — Top Right</span><span class="es-dot"></span><span>Drop A .py File To Open</span></div>
         </div>
       </div>
 
@@ -200,11 +201,6 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
       <input id="pal-field" placeholder="Search Files — > Commands · @ Symbols · # Snippets" spellcheck="false" autocomplete="off">
     </div>
     <div id="pal-list"></div>
-    <div class="pal-foot">
-      <span><kbd>↑</kbd><kbd>↓</kbd>Navigate</span>
-      <span><kbd>↵</kbd>Open</span>
-      <span><kbd>Esc</kbd>Close</span>
-    </div>
   </div>
 </div>
 
@@ -239,7 +235,7 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
           <span id="ai-status" class="aim-status"></span>
         </div>
       </div>
-      <div class="aim-hint"><kbd>Tab</kbd><span>Accept Suggestion</span><span class="aim-dot"></span><span>Keep Typing To Dismiss</span></div>
+      <div class="aim-hint"><span>Tab Accepts A Suggestion</span><span class="aim-dot"></span><span>Keep Typing To Dismiss</span></div>
     </div>
   </div>
 </div>

@@ -11,18 +11,17 @@ const WS_KEY = 'noir.py:workspace';
 const PREF_KEY = 'noir.py:prefs';
 const LEGACY_KEY = 'noir.py:code';
 const IS_MAC = /mac|ipad|iphone/i.test(navigator.userAgent);
-const MOD = IS_MAC ? '⌘' : 'Ctrl';
 
 const $ = id => document.getElementById(id);
 const app = $('app'), fileListEl = $('file-list'), tabsEl = $('tabs'), tabbarEl = $('tabbar'),
-      emptyState = $('empty-state'), btnRun = $('btn-run'), runIc = $('run-ic'), runLabel = $('run-label'),
+      emptyState = $('empty-state'), btnRun = $('btn-run'), runIc = $('run-ic'),
       stLeft = $('st-left'), stText = $('st-text'), stSpin = $('st-spin'), stPos = $('st-pos'),
       stSpaces = $('st-spaces'), stEol = $('st-eol'), stPy = $('st-py'),
       linesEl = $('lines'), conEmpty = $('con-empty'), conBody = $('con-body'),
       conZone = $('console-zone'), grip = $('console-grip'), editorPane = $('editor-pane'),
       pal = $('palette'), palField = $('pal-field'), palList = $('pal-list'),
       toastsEl = $('toasts'),
-      btnOpen = $('btn-open'), btnDownload = $('btn-download'), filePick = $('file-pick'),
+      btnOpen = null, btnDownload = null, filePick = $('file-pick'),
       replRow = $('repl-row'), replField = $('repl-field'), stFont = $('st-font'),
       sbTitle = $('sb-title'), viewSearch = $('view-search'), viewVars = $('view-vars'), viewHist = $('view-hist'), viewPlots = $('view-plots'),
       srQ = $('sr-q'), srR = $('sr-r'), srCase = $('sr-case'), srRex = $('sr-rex'), srAllBtn = $('sr-all'), srResults = $('sr-results'),
@@ -40,6 +39,11 @@ const ICONS = {
   panelLeft: SV('<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9 4v16"/>'),
   panelBottom: SV('<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 15h18"/>'),
   play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5.3v13.4c0 .8.9 1.3 1.6.9l11-6.7c.7-.4.7-1.4 0-1.8l-11-6.7c-.7-.4-1.6.1-1.6.9z"/></svg>',
+  playLine: SV('<path d="M7.5 5.1v13.8c0 .9 1 1.5 1.8 1l10.6-6.9c.7-.5.7-1.6 0-2L9.3 4.1c-.8-.5-1.8.1-1.8 1z"/>'),
+  undo: SV('<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>'),
+  redo: SV('<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>'),
+  info: SV('<circle cx="12" cy="12" r="9"/><path d="M12 8h.01"/><path d="M12 12v4"/>'),
+  externalLink: SV('<path d="M15 3h6v6"/><path d="m10 14 11-11"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'),
   spinner: '<svg class="ic-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-opacity=".22"/><path d="M21 12a9 9 0 0 0-9-9" stroke-linecap="round"/></svg>',
   moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>',
   plus: SV('<path d="M12 5v14M5 12h14"/>'),
@@ -85,7 +89,6 @@ const ICONS = {
 };
 
 document.querySelectorAll('[data-ic]').forEach(n => { n.innerHTML = ICONS[n.dataset.ic] || ''; });
-document.querySelectorAll('[data-kbd]').forEach(n => { n.textContent = n.dataset.kbd.replace('Mod', MOD); });
 
 /* favicon: the real two-tone python mark — self-contained gradients (ids are local to the data-uri document) */
 (function(){
@@ -99,13 +102,6 @@ document.querySelectorAll('[data-kbd]').forEach(n => { n.textContent = n.dataset
   );
   document.head.appendChild(l);
 })();
-
-/* platform-correct shortcut hints in tooltips (kept out of button labels) */
-btnRun.title = 'Run File (' + MOD + (IS_MAC ? ' Enter' : '+Enter') + ')';
-$('btn-sidebar').title = 'Toggle Sidebar (' + MOD + '+B)';
-$('btn-console').title = 'Toggle Console (' + MOD + '+J)';
-$('btn-palette').title = 'Command Palette (' + MOD + '+K)';
-$('btn-clear').title = 'Clear Console (' + MOD + '+L)';
 
 /* ---------- state ---------- */
 
@@ -141,8 +137,7 @@ function st(text, spin){ stText.textContent = text; stSpin.hidden = !spin; }
 
 function updateRunUI(){
   btnRun.disabled = S.running || !S.pyReady || !S.monacoReady || !activeFile();
-  runIc.innerHTML = S.running ? ICONS.spinner : ICONS.play;
-  runLabel.textContent = S.running ? 'Running' : 'Run';
+  runIc.innerHTML = S.running ? ICONS.spinner : ICONS.playLine;
   replRow.hidden = !S.pyReady || S.running;
   if (!replRow.hidden) hideEmpty();
 }
@@ -164,10 +159,11 @@ function toast(msg, action, ms){
 
 /* ---------- context menu system ---------- */
 
-let ctxEl = null, ctxRows = [], ctxSel = 0;
+let ctxEl = null, ctxRows = [], ctxSel = 0, ctxFromMenu = null;
 
 function ctxClose(){
   if (ctxEl){ ctxEl.remove(); ctxEl = null; ctxRows = []; }
+  if (ctxFromMenu){ ctxFromMenu.classList.remove('open'); ctxFromMenu = null; }
 }
 
 function ctxMark(){
@@ -196,7 +192,6 @@ function ctxShow(x, y, items){
     if (it.disabled) row.classList.add('disabled');
     row.innerHTML = ICONS[it.icon] || '';
     row.appendChild(h('span', 'ctx-label', it.label));
-    if (it.kbd) row.appendChild(h('kbd', null, it.kbd));
     if (!it.disabled) row.addEventListener('click', () => { const fn = it.fn; ctxClose(); fn(); });
     row.addEventListener('mouseenter', () => { ctxSel = ctxRows.indexOf(row); ctxMark(); });
     ctxEl.appendChild(row);
@@ -212,7 +207,7 @@ function ctxShow(x, y, items){
   ctxMark();
 }
 
-window.addEventListener('mousedown', e => { if (ctxEl && !ctxEl.contains(e.target)) ctxClose(); }, true);
+window.addEventListener('mousedown', e => { if (ctxEl && !ctxEl.contains(e.target) && !e.target.closest('.menu-btn')) ctxClose(); }, true);
 window.addEventListener('scroll', () => ctxClose(), true);
 window.addEventListener('blur', () => ctxClose());
 
@@ -226,6 +221,97 @@ window.addEventListener('keydown', e => {
   else if (e.key === 'Escape' || e.key === 'Tab'){ e.preventDefault(); e.stopImmediatePropagation(); ctxClose(); }
   else { e.preventDefault(); e.stopImmediatePropagation(); ctxClose(); }
 }, true);
+
+/* ---------- menu bar — dropdowns reuse the context-menu component ---------- */
+
+const MENUS = {
+  file: () => [
+    { label: 'New File', icon: 'plus', fn: newFile },
+    { label: 'Open File…', icon: 'folderOpen', fn: () => filePick.click() },
+    { sep: true },
+    { label: 'Save File', icon: 'save', fn: () => { saveWS(); toast('Saved'); } },
+    { label: 'Download File', icon: 'download', fn: () => downloadFile() },
+    { label: 'Copy Share Link', icon: 'link', fn: () => copyShareLink() },
+    { sep: true },
+    { label: 'Close File', icon: 'x', disabled: !activeFile(), fn: () => { const f = activeFile(); if (f) deleteFile(f.id); } }
+  ],
+  edit: () => [
+    { label: 'Undo', icon: 'undo', fn: () => runEditorAction('undo') },
+    { label: 'Redo', icon: 'redo', fn: () => runEditorAction('redo') },
+    { sep: true },
+    { label: 'Find & Replace…', icon: 'search', fn: () => runEditorAction('editor.action.startFindReplaceAction') },
+    { label: 'Format Document', icon: 'wand', fn: formatDocument },
+    { label: 'Toggle Line Comment', icon: 'hash', fn: () => runEditorAction('editor.action.commentLine') },
+    { sep: true },
+    { label: 'Rename Symbol', icon: 'pencil', fn: renameSymbolAt },
+    { label: 'Duplicate Selection', icon: 'copyPlus', fn: () => runEditorAction('editor.action.duplicateSelection') }
+  ],
+  view: () => [
+    { label: 'Toggle Sidebar', icon: 'panelLeft', fn: () => toggleSidebar() },
+    { label: 'Toggle Console', icon: 'panelBottom', fn: () => toggleConsole() },
+    { sep: true },
+    { label: 'Explorer', icon: 'fileCode', fn: () => setView('files', { force: true }) },
+    { label: 'Search', icon: 'search', fn: () => setView('search', { force: true }) },
+    { label: 'Variables', icon: 'activity', fn: () => setView('vars', { force: true }) },
+    { label: 'Plots', icon: 'chart', fn: () => setView('plots', { force: true }) },
+    { label: 'History', icon: 'history', fn: () => setView('hist', { force: true }) },
+    { sep: true },
+    { label: 'Toggle Minimap', icon: 'map', fn: () => toggleMinimap() },
+    { label: 'Toggle Word Wrap', icon: 'wrap', fn: () => toggleWrap() },
+    { sep: true },
+    { label: 'Zoom In', icon: 'zoomIn', fn: () => setFont(S.prefs.fontSize + 1) },
+    { label: 'Zoom Out', icon: 'zoomOut', fn: () => setFont(S.prefs.fontSize - 1) },
+    { label: 'Reset Font Size', icon: 'type', fn: () => resetFont() },
+    { sep: true },
+    { label: 'Toggle Dark Mode', icon: 'moon', fn: toggleTheme }
+  ],
+  run: () => [
+    { label: 'Run File', icon: 'play', disabled: !activeFile(), fn: () => run() },
+    { label: 'Run Selection', icon: 'runSel', fn: () => runSelection() },
+    { label: 'Profile File', icon: 'gauge', fn: () => profileFile() },
+    { sep: true },
+    { label: 'Restart Runtime', icon: 'rotate', fn: () => restartRuntime() },
+    { label: 'Clear Console', icon: 'eraser', fn: () => clearConsole() }
+  ],
+  tools: () => [
+    { label: 'Command Palette…', icon: 'command', fn: () => openPalette('>') },
+    { label: 'Install Package…', icon: 'box', fn: () => openPalette('install ') },
+    { label: 'Ghost Text Settings…', icon: 'wand', fn: () => openAIModal() },
+    { sep: true },
+    { label: 'Lint File', icon: 'circleX', fn: () => { const f = activeFile(); if (f) lintModel(f.model, true); } },
+    { label: 'Next Problem', icon: 'chevDown', fn: () => nextProblem(false) }
+  ],
+  help: () => [
+    { label: 'About noir.py', icon: 'info', fn: () => toast('noir.py — an offline python editor that runs entirely in your browser') },
+    { label: 'Keyboard Shortcuts', icon: 'command', fn: () => openPalette('>') },
+    { label: 'Pyodide Docs', icon: 'externalLink', fn: () => window.open('https://pyodide.org/en/stable/usage/index.html', '_blank') }
+  ]
+};
+
+function menuBarShow(btn, name){
+  const build = MENUS[name];
+  if (!build) return;
+  const r = btn.getBoundingClientRect();
+  ctxShow(r.left, r.bottom + 4, build());  /* ctxShow closes any open menu itself */
+  ctxFromMenu = btn;                        /* set after — survives the internal ctxClose */
+  btn.classList.add('open');
+}
+
+function menuBarClick(e){
+  const btn = e.currentTarget;
+  if (ctxFromMenu === btn){ ctxClose(); return; }
+  menuBarShow(btn, btn.dataset.menu);
+}
+
+let menuFocusTimer = 0;
+document.querySelectorAll('.menu-btn').forEach(btn => {
+  btn.addEventListener('click', menuBarClick);
+  btn.addEventListener('mouseenter', () => {
+    if (!ctxFromMenu) return; /* follow-hover only while a menu is already open */
+    clearTimeout(menuFocusTimer);
+    menuFocusTimer = setTimeout(() => { if (ctxFromMenu && ctxFromMenu !== btn) menuBarShow(btn, btn.dataset.menu); }, 60);
+  });
+});
 
 /* editor clipboard + menu */
 
@@ -414,27 +500,27 @@ function editorMenu(x, y){
   const sel = editor.getSelection();
   const hasSel = sel && !sel.isEmpty() && !!editor.getModel();
   ctxShow(x, y, [
-    { label: 'Cut', icon: 'scissors', kbd: MOD + ' X', disabled: !hasSel, fn: clipCutSel },
-    { label: 'Copy', icon: 'copy', kbd: MOD + ' C', disabled: !hasSel, fn: clipCopySel },
-    { label: 'Paste', icon: 'paste', kbd: MOD + ' V', fn: clipPaste },
+    { label: 'Cut', icon: 'scissors', disabled: !hasSel, fn: clipCutSel },
+    { label: 'Copy', icon: 'copy', disabled: !hasSel, fn: clipCopySel },
+    { label: 'Paste', icon: 'paste', fn: clipPaste },
     { sep: true },
-    { label: 'Run File', icon: 'play', kbd: MOD + ' ⏎', disabled: !activeFile(), fn: run },
-    { label: 'Run Selection', icon: 'runSel', kbd: MOD + ' ⇧ ⏎', fn: runSelection },
+    { label: 'Run File', icon: 'play', disabled: !activeFile(), fn: run },
+    { label: 'Run Selection', icon: 'runSel', fn: runSelection },
     { label: 'Profile File', icon: 'gauge', fn: profileFile },
     { sep: true },
-    { label: 'Go To Definition', icon: 'goto', kbd: 'F12', fn: gotoDefAction },
-    { label: 'Find All References', icon: 'search', kbd: '⇧ F12', fn: findRefsAction },
-    { label: 'Go To Symbol…', icon: 'listTree', kbd: MOD + ' ⇧ O', fn: quickOutlineAction },
+    { label: 'Go To Definition', icon: 'goto', fn: gotoDefAction },
+    { label: 'Find All References', icon: 'search', fn: findRefsAction },
+    { label: 'Go To Symbol…', icon: 'listTree', fn: quickOutlineAction },
     { sep: true },
-    { label: 'Toggle Line Comment', icon: 'hash', kbd: MOD + ' /', fn: () => runEditorAction('editor.action.commentLine') },
+    { label: 'Toggle Line Comment', icon: 'hash', fn: () => runEditorAction('editor.action.commentLine') },
     { label: 'Duplicate Selection', icon: 'copyPlus', fn: () => runEditorAction('editor.action.duplicateSelection') },
-    { label: 'Rename Symbol', icon: 'pencil', kbd: 'F2', fn: renameSymbolAt },
-    { label: 'Format Document', icon: 'wand', kbd: IS_MAC ? '⇧ ⌥ F' : '⇧ Alt F', fn: formatDocument },
-    { label: 'Find In Files', icon: 'search', kbd: MOD + ' ⇧ F', fn: openSearch },
+    { label: 'Rename Symbol', icon: 'pencil', fn: renameSymbolAt },
+    { label: 'Format Document', icon: 'wand', fn: formatDocument },
+    { label: 'Find In Files', icon: 'search', fn: openSearch },
     { sep: true },
     { label: 'Ghost Text Settings…', icon: 'wand', fn: openAIModal },
     { label: 'Toggle Dark Mode', icon: 'moon', fn: toggleTheme },
-    { label: 'Command Palette…', icon: 'command', kbd: MOD + ' K', fn: () => openPalette('>') }
+    { label: 'Command Palette…', icon: 'command', fn: () => openPalette('>') }
   ]);
 }
 
@@ -535,7 +621,7 @@ function consoleMenu(x, y){
     { label: 'Copy', icon: 'copy', disabled: !hasSel, fn: () => { try { document.execCommand('copy'); } catch (e) {} } },
     { label: 'Copy All Output', icon: 'copy', fn: copyOutput },
     { sep: true },
-    { label: 'Clear Console', icon: 'eraser', kbd: MOD + ' L', fn: clearConsole },
+    { label: 'Clear Console', icon: 'eraser', fn: clearConsole },
     { label: 'Save Output As .txt', icon: 'download', fn: saveConsoleOutput }
   ]);
 }
@@ -563,9 +649,9 @@ emptyState.addEventListener('contextmenu', e => {
   e.preventDefault();
   ctxShow(e.clientX, e.clientY, [
     { label: 'New File', icon: 'plus', fn: newFile },
-    { label: 'Open File…', icon: 'folderOpen', kbd: MOD + ' O', fn: () => filePick.click() },
+    { label: 'Open File…', icon: 'folderOpen', fn: () => filePick.click() },
     { sep: true },
-    { label: 'Command Palette…', icon: 'command', kbd: MOD + ' K', fn: () => openPalette('>') }
+    { label: 'Command Palette…', icon: 'command', fn: () => openPalette('>') }
   ]);
 });
 
@@ -1380,9 +1466,6 @@ $('es-new').addEventListener('click', newFile);
 $('btn-restart').addEventListener('click', restartRuntime);
 $('btn-clear').addEventListener('click', clearConsole);
 $('btn-concollapse').addEventListener('click', () => toggleConsole());
-btnOpen.addEventListener('click', () => filePick.click());
-btnDownload.addEventListener('click', downloadFile);
-$('btn-share').addEventListener('click', copyShareLink);
 filePick.addEventListener('change', () => { importFile(filePick.files[0]); filePick.value = ''; });
 stFont.addEventListener('click', resetFont);
 btnRun.addEventListener('click', run);
@@ -1440,24 +1523,24 @@ stPy.addEventListener('click', () => toast('Python ' + pyVersion + ' · Pyodide 
 /* ---------- command palette ---------- */
 
 const COMMANDS = [
-  { label: 'Run File', kbd: MOD + ' ⏎', icon: 'play', fn: () => run() },
-  { label: 'Run Selection', kbd: MOD + ' ⇧ ⏎', icon: 'runSel', fn: () => runSelection() },
+  { label: 'Run File', icon: 'play', fn: () => run() },
+  { label: 'Run Selection', icon: 'runSel', fn: () => runSelection() },
   { label: 'Profile File', icon: 'gauge', fn: () => profileFile() },
   { label: 'New File', icon: 'plus', fn: () => newFile() },
-  { label: 'Save File', kbd: MOD + ' S', icon: 'save', fn: () => { saveWS(); toast('Saved'); } },
-  { label: 'Open File…', kbd: MOD + ' O', icon: 'folderOpen', fn: () => filePick.click() },
-  { label: 'Download File', kbd: MOD + ' ⇧ S', icon: 'download', fn: () => downloadFile() },
+  { label: 'Save File', icon: 'save', fn: () => { saveWS(); toast('Saved'); } },
+  { label: 'Open File…', icon: 'folderOpen', fn: () => filePick.click() },
+  { label: 'Download File', icon: 'download', fn: () => downloadFile() },
   { label: 'Copy Share Link', icon: 'link', fn: () => copyShareLink() },
-  { label: 'Find In Files', kbd: MOD + ' ⇧ F', icon: 'search', fn: () => openSearch() },
-  { label: 'Go To Symbol…', kbd: MOD + ' ⇧ O', icon: 'listTree', fn: () => { if (editor){ editor.focus(); quickOutlineAction(); } } },
+  { label: 'Find In Files', icon: 'search', fn: () => openSearch() },
+  { label: 'Go To Symbol…', icon: 'listTree', fn: () => { if (editor){ editor.focus(); quickOutlineAction(); } } },
   { label: 'Lint File', icon: 'circleX', fn: () => { const f = activeFile(); if (f) lintModel(f.model, true); } },
-  { label: 'Format Document', kbd: IS_MAC ? '⇧ ⌥ F' : '⇧ Alt F', icon: 'wand', fn: () => formatDocument() },
-  { label: 'Rename Symbol', kbd: 'F2', icon: 'pencil', fn: () => renameSymbolAt() },
-  { label: 'Next Problem', kbd: 'F8', icon: 'chevDown', fn: () => nextProblem(false) },
+  { label: 'Format Document', icon: 'wand', fn: () => formatDocument() },
+  { label: 'Rename Symbol', icon: 'pencil', fn: () => renameSymbolAt() },
+  { label: 'Next Problem', icon: 'chevDown', fn: () => nextProblem(false) },
   { label: 'Install Package…', icon: 'box', fn: () => openPalette('install ') },
   { label: 'Ghost Text Settings…', icon: 'wand', fn: () => openAIModal() },
   { label: 'Toggle Dark Mode', icon: 'moon', fn: toggleTheme },
-  { label: 'Clear Console', kbd: MOD + ' L', icon: 'eraser', fn: () => clearConsole() },
+  { label: 'Clear Console', icon: 'eraser', fn: () => clearConsole() },
   { label: 'Copy Console Output', icon: 'copy', fn: () => copyOutput() },
   { label: 'Restart Runtime', icon: 'rotate', fn: () => restartRuntime() },
   { label: 'View: Explorer', icon: 'fileCode', fn: () => setView('files', { force: true }) },
@@ -1465,14 +1548,14 @@ const COMMANDS = [
   { label: 'View: Variables', icon: 'activity', fn: () => setView('vars', { force: true }) },
   { label: 'View: Plots', icon: 'chart', fn: () => setView('plots', { force: true }) },
   { label: 'View: History', icon: 'history', fn: () => setView('hist', { force: true }) },
-  { label: 'Toggle Sidebar', kbd: MOD + ' B', icon: 'panelLeft', fn: () => toggleSidebar() },
-  { label: 'Toggle Console', kbd: MOD + ' J', icon: 'panelBottom', fn: () => toggleConsole() },
-  { label: 'Focus Console', kbd: MOD + ' `', icon: 'terminal', fn: () => focusConsoleInput() },
-  { label: 'Zoom In', kbd: MOD + ' +', icon: 'zoomIn', fn: () => setFont(S.prefs.fontSize + 1) },
-  { label: 'Zoom Out', kbd: MOD + ' -', icon: 'zoomOut', fn: () => setFont(S.prefs.fontSize - 1) },
-  { label: 'Reset Font Size', kbd: MOD + ' 0', icon: 'type', fn: () => resetFont() },
+  { label: 'Toggle Sidebar', icon: 'panelLeft', fn: () => toggleSidebar() },
+  { label: 'Toggle Console', icon: 'panelBottom', fn: () => toggleConsole() },
+  { label: 'Focus Console', icon: 'terminal', fn: () => focusConsoleInput() },
+  { label: 'Zoom In', icon: 'zoomIn', fn: () => setFont(S.prefs.fontSize + 1) },
+  { label: 'Zoom Out', icon: 'zoomOut', fn: () => setFont(S.prefs.fontSize - 1) },
+  { label: 'Reset Font Size', icon: 'type', fn: () => resetFont() },
   { label: 'Toggle Minimap', icon: 'map', fn: () => toggleMinimap() },
-  { label: 'Toggle Word Wrap', kbd: 'Alt Z', icon: 'wrap', fn: () => toggleWrap() },
+  { label: 'Toggle Word Wrap', icon: 'wrap', fn: () => toggleWrap() },
   { label: 'Close File', icon: 'x', fn: () => { const f = activeFile(); if (f) deleteFile(f.id); } }
 ];
 
@@ -1518,7 +1601,7 @@ function renderPal(){
   palItems = [];
   if (isInst){
     const name = raw.slice(7).trim();
-    if (name) palItems.push({ label: 'Install "' + name + '" From PyPI', icon: 'box', kbd: '⏎', hl: [], fn: () => installPackage(name) });
+    if (name) palItems.push({ label: 'Install "' + name + '" From PyPI', icon: 'box', hl: [], fn: () => installPackage(name) });
   } else if (isSym){
     const f = activeFile();
     if (f && S.pyReady){
@@ -1526,7 +1609,7 @@ function renderPal(){
       const syms = py('outline_flat', f.model.getValue()) || [];
       for (const s of syms){
         const m = fuzzy(sq, s.p);
-        if (m) palItems.push({ label: s.p, icon: s.k === 'class' ? 'fileCode' : 'listTree', kbd: 'Ln ' + s.l, hl: m.idxs, fn: () => {
+        if (m) palItems.push({ label: s.p, icon: s.k === 'class' ? 'fileCode' : 'listTree', hl: m.idxs, fn: () => {
           switchTo(f.id);
           editor.revealLineInCenter(s.l);
           editor.setPosition({ lineNumber: s.l, column: 1 });
@@ -1538,18 +1621,18 @@ function renderPal(){
     const sq = raw.slice(1).trim();
     for (const sn of SNIPS){
       const m = fuzzy(sq, sn.l + ' ' + (sn.d || ''));
-      if (m) palItems.push({ label: sn.l, icon: 'insert', kbd: 'Snippet', hl: m.idxs.filter(i => i < sn.l.length), fn: () => insertSnippetAtCursor(sn) });
+      if (m) palItems.push({ label: sn.l, icon: 'insert', hl: m.idxs.filter(i => i < sn.l.length), fn: () => insertSnippetAtCursor(sn) });
     }
   } else if (isCmd){
     const sq = raw.slice(1).trim();
     for (const c of COMMANDS){
       const m = fuzzy(sq, c.label);
-      if (m) palItems.push({ label: c.label, icon: c.icon, kbd: c.kbd, hl: m.idxs, fn: c.fn });
+      if (m) palItems.push({ label: c.label, icon: c.icon, hl: m.idxs, fn: c.fn });
     }
   } else {
     for (const f of S.files){
       const m = fuzzy(q, f.name);
-      if (m) palItems.push({ label: f.name, icon: 'python', kbd: null, hl: m.idxs, fn: () => switchTo(f.id) });
+      if (m) palItems.push({ label: f.name, icon: 'python', hl: m.idxs, fn: () => switchTo(f.id) });
     }
   }
   palItems.sort((a, b) => a.label.localeCompare(b.label));
@@ -1575,7 +1658,6 @@ function renderPal(){
     }
     if (buf) lab.appendChild(document.createTextNode(buf));
     row.appendChild(lab);
-    if (it.kbd) row.appendChild(h('kbd', null, it.kbd));
     row.addEventListener('mouseenter', () => { palSel = i; markSel(); });
     row.addEventListener('click', () => execItem(i));
     palList.appendChild(row);
@@ -2096,7 +2178,7 @@ function restoreDiff(){
   saveWS();
   scheduleLintFor(m);
   renderHist();
-  toast('Restored Snapshot — ' + MOD + '+Z To Undo');
+  toast('Restored Snapshot — Undo Again To Revert');
 }
 
 $('dw-close').addEventListener('click', closeDiff);
