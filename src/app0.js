@@ -7,6 +7,7 @@ const MONACO_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs';
 const PYODIDE_BASE = 'https://cdn.jsdelivr.net/pyodide/v0.29.5/full/';
 const MONO_FONT = "ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace";
 const PYODIDE_VERSION = '0.29.5';
+const APP_VERSION = '15.0';
 const WS_KEY = 'noir.py:workspace';
 const PREF_KEY = 'noir.py:prefs';
 const LEGACY_KEY = 'noir.py:code';
@@ -30,6 +31,7 @@ const app = $('app'), fileListEl = $('file-list'), tabsEl = $('tabs'), tabbarEl 
       stProb = $('st-prob'), spErr = $('sp-n-err'), spWarn = $('sp-n-warn'),
       diffWrap = $('diffwrap'), diffHost = $('diff-host'), dwLabel = $('dw-label'),
       stAi = $('st-ai'), stTheme = $('st-theme'), aiModal = $('ai-modal'), aiUrl = $('ai-url'), aiModel = $('ai-model'), aiStatus = $('ai-status'),
+      aboutModal = $('about-modal'), abVer = $('ab-ver'), abRun = $('ab-run'),
       aiTestBtn = $('ai-test');
 
 /* ---------- icon set (lucide-style, consistent 2px strokes) ---------- */
@@ -73,7 +75,7 @@ const ICONS = {
   copy: SV('<rect width="13" height="13" x="9" y="9" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
   link: SV('<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>'),
   runSel: SV('<path d="M4 6h9M4 12h9M4 18h5"/><path d="M16 5v14l6-7z" fill="currentColor" stroke-width="0"/>'),
-  python: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="url(#noirPyB)" fill-rule="evenodd" d="M11.914 0C5.82 0 5.914 2.656 5.914 2.656l.011 2.75h6.107v.827H3.7S0 5.721 0 11.869c0 6.148 3.234 5.912 3.234 5.912h1.929v-2.852s-.104-3.233 3.181-3.233h5.479s3.079.05 3.079-2.976V3.572S17.346 0 11.914 0zM8.19 2.062c.55 0 .994.445.994.993 0 .55-.444.994-.993.994a.995.995 0 0 1-.994-.994c0-.548.445-.993.994-.993z"/><path fill="url(#noirPyY)" fill-rule="evenodd" d="M12.253 23.97c6.094 0 5.999-2.656 5.999-2.656l-.011-2.75h-6.107v-.827h8.332s3.715.421 3.715-5.727c0-6.148-3.235-5.912-3.235-5.912h-1.929v2.852s.104 3.233-3.181 3.233h-5.479s-3.079-.05-3.079 2.976v5.012s-.467 2.799 5.896 2.799zm3.19-2.062a.995.995 0 0 1-.993-.994c0-.548.444-.993.993-.993.55 0 .994.445.994.993 0 .55-.444.994-.994.994z"/></svg>',
+  python: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M11.914 0C5.82 0 5.914 2.656 5.914 2.656l.011 2.75h6.107v.827H3.7S0 5.721 0 11.869c0 6.148 3.234 5.912 3.234 5.912h1.929v-2.852s-.104-3.233 3.181-3.233h5.479s3.079.05 3.079-2.976V3.572S17.346 0 11.914 0zM8.19 2.062c.55 0 .994.445.994.993 0 .55-.444.994-.993.994a.995.995 0 0 1-.994-.994c0-.548.445-.993.994-.993z"/><path fill="currentColor" fill-opacity=".42" fill-rule="evenodd" d="M12.253 23.97c6.094 0 5.999-2.656 5.999-2.656l-.011-2.75h-6.107v-.827h8.332s3.715.421 3.715-5.727c0-6.148-3.235-5.912-3.235-5.912h-1.929v2.852s.104 3.233-3.181 3.233h-5.479s-3.079-.05-3.079 2.976v5.012s-.467 2.799 5.896 2.799zm3.19-2.062a.995.995 0 0 1-.993-.994c0-.548.444-.993.993-.993.55 0 .994.445.994.993 0 .55-.444.994-.994.994z"/></svg>',
   scissors: SV('<circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/>'),
   paste: SV('<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/><path d="M12 12v8"/><path d="m9 17 3 3 3-3"/>'),
   gauge: SV('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>'),
@@ -91,16 +93,16 @@ const ICONS = {
 
 document.querySelectorAll('[data-ic]').forEach(n => { n.innerHTML = ICONS[n.dataset.ic] || ''; });
 
-/* favicon: the real two-tone python mark — self-contained gradients (ids are local to the data-uri document) */
+/* favicon: the colorful two-tone python mark — gradients live inside the data-uri document */
 (function(){
+  const paths = '<path fill="url(#fA)" fill-rule="evenodd" d="M11.914 0C5.82 0 5.914 2.656 5.914 2.656l.011 2.75h6.107v.827H3.7S0 5.721 0 11.869c0 6.148 3.234 5.912 3.234 5.912h1.929v-2.852s-.104-3.233 3.181-3.233h5.479s3.079.05 3.079-2.976V3.572S17.346 0 11.914 0zM8.19 2.062c.55 0 .994.445.994.993 0 .55-.444.994-.993.994a.995.995 0 0 1-.994-.994c0-.548.445-.993.994-.993z"/><path fill="url(#fB)" fill-rule="evenodd" d="M12.253 23.97c6.094 0 5.999-2.656 5.999-2.656l-.011-2.75h-6.107v-.827h8.332s3.715.421 3.715-5.727c0-6.148-3.235-5.912-3.235-5.912h-1.929v2.852s.104 3.233-3.181 3.233h-5.479s-3.079-.05-3.079 2.976v5.012s-.467 2.799 5.896 2.799zm3.19-2.062a.995.995 0 0 1-.993-.994c0-.548.444-.993.993-.993.55 0 .994.445.994.993 0 .55-.444.994-.994.994z"/>';
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs>' +
+    '<linearGradient id="fA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4B8BBE"/><stop offset="1" stop-color="#306998"/></linearGradient>' +
+    '<linearGradient id="fB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE873"/><stop offset="1" stop-color="#FFC331"/></linearGradient>' +
+    '</defs>' + paths + '</svg>';
   const l = document.createElement('link');
   l.rel = 'icon';
-  l.href = 'data:image/svg+xml,' + encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs>' +
-    '<linearGradient id="noirPyB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4B8BBE"/><stop offset="1" stop-color="#306998"/></linearGradient>' +
-    '<linearGradient id="noirPyY" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE873"/><stop offset="1" stop-color="#FFC331"/></linearGradient>' +
-    '</defs>' + ICONS.python.replace(/^<svg[^>]*>|<\/svg>$/g, '') + '</svg>'
-  );
+  l.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
   document.head.appendChild(l);
 })();
 
@@ -284,7 +286,7 @@ const MENUS = {
     { label: 'Next Problem', icon: 'chevDown', fn: () => nextProblem(false) }
   ],
   help: () => [
-    { label: 'About noir.py', icon: 'info', fn: () => toast('noir.py — an offline python editor that runs entirely in your browser') },
+    { label: 'About noir.py', icon: 'info', fn: openAbout },
     { label: 'Keyboard Shortcuts', icon: 'command', fn: () => openPalette('>') },
     { label: 'Pyodide Docs', icon: 'externalLink', fn: () => window.open('https://pyodide.org/en/stable/usage/index.html', '_blank') }
   ]
@@ -1541,6 +1543,7 @@ const COMMANDS = [
   { label: 'Next Problem', icon: 'chevDown', fn: () => nextProblem(false) },
   { label: 'Install Package…', icon: 'box', fn: () => openPalette('install ') },
   { label: 'Ghost Text Settings…', icon: 'wand', fn: () => openAIModal() },
+  { label: 'About noir.py', icon: 'info', fn: openAbout },
   { label: 'Toggle Dark Mode', icon: 'moon', fn: toggleTheme },
   { label: 'Clear Console', icon: 'eraser', fn: () => clearConsole() },
   { label: 'Copy Console Output', icon: 'copy', fn: () => copyOutput() },
@@ -1714,6 +1717,7 @@ pal.addEventListener('mousedown', e => { if (e.target === pal) closePalette(); }
 
 window.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !aiModal.hidden){ e.preventDefault(); closeAIModal(); return; }
+  if (e.key === 'Escape' && !aboutModal.hidden){ e.preventDefault(); closeAbout(); return; }
   if (e.key === 'Escape' && palOpenState){ e.preventDefault(); closePalette(); return; }
   if (e.key === 'Escape' && !diffWrap.hidden){ e.preventDefault(); closeDiff(); return; }
   if (e.key === 'Escape' && !plotWrap.hidden){ e.preventDefault(); closePlot(); return; }
@@ -1803,6 +1807,9 @@ function renderView(){
   sbTitle.textContent = VIEWS[v] || 'Explorer';
   fileListEl.hidden = v !== 'files';
   $('btn-newfile').hidden = v !== 'files';
+  $('vv-refresh').hidden = v !== 'vars';
+  $('pv-clear').hidden = v !== 'plots';
+  hvName.hidden = v !== 'hist';
   viewSearch.hidden = v !== 'search';
   viewVars.hidden = v !== 'vars';
   viewPlots.hidden = v !== 'plots';
@@ -2119,7 +2126,7 @@ function pushSnap(fileId, text){
 
 function renderHist(){
   const f = activeFile();
-  hvName.textContent = f ? '· ' + f.name : '';
+  hvName.textContent = f ? f.name : '';
   hvList.textContent = '';
   if (!f){ hvList.dataset.empty = 'No File Open'; return; }
   const arr = SNAP[f.id] || [];
@@ -2486,6 +2493,18 @@ aiTestBtn.addEventListener('click', () => {
       aiStatus.textContent = 'Unreachable — Is Ollama Running? If This Editor Opens From A Local File, Launch Ollama With OLLAMA_ORIGINS="*" So The Browser May Call It.';
     });
 });
+
+/* ---------- about dialog ---------- */
+
+function openAbout(){
+  abVer.textContent = APP_VERSION;
+  abRun.textContent = S.pyReady ? 'Python ' + pyVersion + ' · Pyodide ' + PYODIDE_VERSION : 'Pyodide ' + PYODIDE_VERSION;
+  aboutModal.hidden = false;
+}
+function closeAbout(){ aboutModal.hidden = true; if (editor) editor.focus(); }
+
+$('ab-x').addEventListener('click', closeAbout);
+aboutModal.addEventListener('mousedown', e => { if (e.target === aboutModal) closeAbout(); });
 
 /* ---------- monaco ---------- */
 

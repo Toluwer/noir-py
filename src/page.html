@@ -14,11 +14,6 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
 </head>
 <body>
 
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <linearGradient id="noirPyB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4B8BBE"/><stop offset="1" stop-color="#306998"/></linearGradient>
-  <linearGradient id="noirPyY" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE873"/><stop offset="1" stop-color="#FFC331"/></linearGradient>
-</defs></svg>
-
 <div id="app">
 
   <header id="topbar">
@@ -39,10 +34,8 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
 
     <div class="tb-right">
       <button id="btn-console" class="icon-btn" title="Toggle Console" data-ic="panelBottom"></button>
+      <button id="btn-palette" class="icon-btn" title="Command Palette" data-ic="command"></button>
       <div class="tb-div"></div>
-      <button id="btn-palette" class="pal-chip" title="Command Palette">
-        <span data-ic="command"></span>
-      </button>
       <button id="btn-run" disabled title="Run File">
         <span id="run-ic" class="run-ic" data-ic="playLine"></span>
       </button>
@@ -63,7 +56,12 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
     <aside id="sidebar">
       <div class="sb-head">
         <span class="micro" id="sb-title">Explorer</span>
-        <button id="btn-newfile" class="icon-btn sm" title="New File" data-ic="plus"></button>
+        <div class="sb-actions">
+          <span class="sb-tag" id="hv-name" hidden></span>
+          <button id="vv-refresh" class="icon-btn sm" title="Refresh Variables" data-ic="rotate" hidden></button>
+          <button id="pv-clear" class="icon-btn sm" title="Clear Plots" data-ic="trash" hidden></button>
+          <button id="btn-newfile" class="icon-btn sm" title="New File" data-ic="plus"></button>
+        </div>
       </div>
       <div id="file-list"></div>
 
@@ -83,26 +81,14 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
       </div>
 
       <div id="view-vars" hidden>
-        <div class="sv-block vv-head">
-          <span class="micro">Session Variables</span>
-          <button id="vv-refresh" class="icon-btn sm" title="Refresh" data-ic="rotate"></button>
-        </div>
         <div id="vv-list"></div>
       </div>
 
       <div id="view-plots" hidden>
-        <div class="sv-block vv-head">
-          <span class="micro">Plots</span>
-          <button id="pv-clear" class="icon-btn sm" title="Clear Plots" data-ic="trash"></button>
-        </div>
         <div id="pv-list"></div>
       </div>
 
       <div id="view-hist" hidden>
-        <div class="sv-block vv-head">
-          <span class="micro">History</span>
-          <span class="micro" id="hv-name"></span>
-        </div>
         <div id="hv-list"></div>
       </div>
     </aside>
@@ -241,6 +227,31 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
 </div>
 
 <div id="toasts"></div>
+
+<div id="about-modal" hidden>
+  <div class="ab-box" role="dialog" aria-label="About noir.py">
+    <div class="ab-head">
+      <span data-ic="info"></span>
+      <span>About noir.py</span>
+      <button id="ab-x" class="icon-btn sm" title="Close (Esc)" data-ic="x"></button>
+    </div>
+    <div class="ab-body">
+      <div class="ab-mark" data-ic="python" aria-hidden="true"></div>
+      <div class="ab-name">noir<span>.py</span></div>
+      <div class="ab-tag">An offline Python editor that runs entirely in your browser.</div>
+      <div class="ab-rows">
+        <div class="ab-row"><span>Version</span><b id="ab-ver"></b></div>
+        <div class="ab-row"><span>Runtime</span><b id="ab-run"></b></div>
+        <div class="ab-row"><span>Editor</span><b>Monaco</b></div>
+        <div class="ab-row"><span>Storage</span><b>Browser — Local Only</b></div>
+      </div>
+      <div class="ab-foot">
+        <span>Files never leave this browser.</span>
+        <a class="ab-link" href="https://github.com/Toluwer/noir-py" target="_blank" rel="noreferrer">GitHub<span data-ic="externalLink"></span></a>
+      </div>
+    </div>
+  </div>
+</div>
 
 <input type="file" id="file-pick" accept=".py,.txt" hidden>
 
