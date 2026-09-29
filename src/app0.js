@@ -2424,7 +2424,7 @@ const ghostLineCache = new Map();
 
 function aiModeLabel(){ return { off: 'Off', local: 'Local', ollama: 'Ollama' }[S.prefs.ai.mode] || 'Local'; }
 function refreshAIChip(){
-  stAi.textContent = 'AI: ' + aiModeLabel();
+  stAi.textContent = 'Ghost: ' + aiModeLabel();
   stAi.title = 'Ghost Text — ' + aiModeLabel() + '. Click To Configure.';
 }
 function openAIModal(){
