@@ -26,7 +26,7 @@ const app = $('app'), fileListEl = $('file-list'), tabsEl = $('tabs'), tabbarEl 
       replRow = $('repl-row'), replField = $('repl-field'), stFont = $('st-font'),
       sbTitle = $('sb-title'), viewSearch = $('view-search'), viewVars = $('view-vars'), viewHist = $('view-hist'), viewPlots = $('view-plots'),
       srQ = $('sr-q'), srR = $('sr-r'), srCase = $('sr-case'), srRex = $('sr-rex'), srAllBtn = $('sr-all'), srResults = $('sr-results'),
-      vvList = $('vv-list'), hvList = $('hv-list'), hvName = $('hv-name'), pvList = $('pv-list'),
+      vvList = $('vv-list'), vvCount = $('vv-count'), hvList = $('hv-list'), hvName = $('hv-name'), pvList = $('pv-list'),
       plotWrap = $('plotwrap'), pwImg = $('pw-img'), pwLabel = $('pw-label'), pwBody = $('pw-body'), pwPrev = $('pw-prev'), pwNext = $('pw-next'), pwSize = $('pw-size'),
       stProb = $('st-prob'), spErr = $('sp-n-err'), spWarn = $('sp-n-warn'),
       diffWrap = $('diffwrap'), diffHost = $('diff-host'), dwLabel = $('dw-label'),
@@ -267,7 +267,7 @@ const MENUS = {
     { label: 'Zoom Out', icon: 'zoomOut', fn: () => setFont(S.prefs.fontSize - 1) },
     { label: 'Reset Font Size', icon: 'type', fn: () => resetFont() },
     { sep: true },
-    { label: 'Dark Mode', icon: 'moon', on: () => S.prefs.theme === 'ink', fn: toggleTheme }
+    { label: 'Ink Theme', icon: 'moon', on: () => S.prefs.theme === 'ink', fn: toggleTheme }
   ],
   run: () => [
     { label: 'Run File', icon: 'play', disabled: !activeFile(), fn: () => run() },
@@ -523,7 +523,7 @@ function editorMenu(x, y){
     { label: 'Find In Files', icon: 'search', fn: openSearch },
     { sep: true },
     { label: 'Ghost Text Settings…', icon: 'wand', fn: openAIModal },
-    { label: 'Dark Mode', icon: 'moon', on: () => S.prefs.theme === 'ink', fn: toggleTheme },
+    { label: 'Ink Theme', icon: 'moon', on: () => S.prefs.theme === 'ink', fn: toggleTheme },
     { label: 'Command Palette…', icon: 'command', fn: () => openPalette('>') }
   ]);
 }
@@ -705,7 +705,7 @@ function applyTheme(t, save){
 }
 function toggleTheme(){
   applyTheme(S.prefs.theme === 'ink' ? 'paper' : 'ink');
-  toast(S.prefs.theme === 'ink' ? 'Dark Mode — Ink' : 'Light Mode — Paper');
+  toast(S.prefs.theme === 'ink' ? 'Theme — Ink' : 'Theme — Paper');
 }
 
 /* ---------- file operations ---------- */
@@ -1544,7 +1544,7 @@ const COMMANDS = [
   { label: 'Install Package…', icon: 'box', fn: () => openPalette('install ') },
   { label: 'Ghost Text Settings…', icon: 'wand', fn: () => openAIModal() },
   { label: 'About noir.py', icon: 'info', fn: openAbout },
-  { label: 'Toggle Dark Mode', icon: 'moon', fn: toggleTheme },
+  { label: 'Toggle Ink Theme', icon: 'moon', fn: toggleTheme },
   { label: 'Clear Console', icon: 'eraser', fn: () => clearConsole() },
   { label: 'Copy Console Output', icon: 'copy', fn: () => copyOutput() },
   { label: 'Restart Runtime', icon: 'rotate', fn: () => restartRuntime() },
@@ -1807,6 +1807,7 @@ function renderView(){
   sbTitle.textContent = VIEWS[v] || 'Explorer';
   fileListEl.hidden = v !== 'files';
   $('btn-newfile').hidden = v !== 'files';
+  $('vv-count').hidden = v !== 'vars';
   $('vv-refresh').hidden = v !== 'vars';
   $('pv-clear').hidden = v !== 'plots';
   hvName.hidden = v !== 'hist';
@@ -1846,6 +1847,7 @@ function refreshVars(){
   vvList.textContent = '';
   if (!S.pyReady){
     vvList.dataset.empty = 'Python Runtime Is Still Loading…';
+    vvCount.hidden = true;
     return;
   }
   const d = py('vars');
@@ -1863,9 +1865,11 @@ function refreshVars(){
   }
   if (!vars.length && !err){
     vvList.dataset.empty = 'No Variables Yet — Run Code To Populate This Panel';
+    vvCount.hidden = true;
     return;
   }
-  vvList.appendChild(h('div', 'vv-sec', 'Variables · ' + vars.length));
+  vvCount.hidden = !(!err && vars.length);
+  if (!err && vars.length) vvCount.textContent = vars.length + (vars.length === 1 ? ' Variable' : ' Variables');
   for (const it of vars) vvList.appendChild(varRow(it.n, it.t, it.v, it.l));
 }
 
@@ -1897,7 +1901,7 @@ function capturePlots(){
 function renderPlots(){
   pvList.textContent = '';
   if (!PLOTS.length){
-    pvList.dataset.empty = 'Run Matplotlib Code — Figures Appear Here After Each Run';
+    pvList.dataset.empty = 'No Plots Yet — Figures Appear Here After Each Run';
     return;
   }
   PLOTS.forEach((p, i) => {
@@ -2130,7 +2134,7 @@ function renderHist(){
   hvList.textContent = '';
   if (!f){ hvList.dataset.empty = 'No File Open'; return; }
   const arr = SNAP[f.id] || [];
-  if (!arr.length){ hvList.dataset.empty = 'Snapshots Are Taken Each Time You Run A File'; return; }
+  if (!arr.length){ hvList.dataset.empty = 'No Snapshots Yet — One Is Taken Each Time You Run A File'; return; }
   const cur = f.model.getValue();
   for (const s of [...arr].reverse()){
     const row = h('div', 'hv-row');

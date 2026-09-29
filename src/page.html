@@ -58,6 +58,7 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
         <span class="micro" id="sb-title">Explorer</span>
         <div class="sb-actions">
           <span class="sb-tag" id="hv-name" hidden></span>
+          <span class="sb-tag" id="vv-count" hidden></span>
           <button id="vv-refresh" class="icon-btn sm" title="Refresh Variables" data-ic="rotate" hidden></button>
           <button id="pv-clear" class="icon-btn sm" title="Clear Plots" data-ic="trash" hidden></button>
           <button id="btn-newfile" class="icon-btn sm" title="New File" data-ic="plus"></button>
@@ -144,7 +145,7 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
           </div>
           <div id="con-body">
             <div id="lines">
-              <div id="con-empty" class="line dim">No Output Yet</div>
+              <div id="con-empty" class="line dim">No Output Yet — Results Appear Here After Each Run</div>
             </div>
             <div id="repl-row" hidden>
               <span class="repl-p">&gt;&gt;&gt;</span>
