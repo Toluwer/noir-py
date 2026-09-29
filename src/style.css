@@ -4,6 +4,7 @@
     /* surfaces */
     --paper:#f5f4ef;          /* page + chrome: topbar, rail, sidebar, statusbar */
     --card:#ffffff;           /* content surfaces: editor card, menus, inputs */
+    --pop:#ffffff;            /* raised popovers (menus, toasts) — sits above --card */
     --well:#faf9f5;           /* hover fill, wells */
 
     /* text */
@@ -49,6 +50,7 @@
   html[data-theme="ink"]{
     --paper:#191713;
     --card:#201d18;
+    --pop:#26231e;
     --well:#28241d;
     --ink:#ece7dc;
     --ink-soft:#b3aca0;
@@ -122,14 +124,18 @@
   .icon-btn.sm svg{width:13.5px;height:13.5px}
 
   /* ---------- menu bar ---------- */
-  #menubar{display:flex;align-items:center;gap:1px;margin-left:2px}
+  #menubar{
+    display:flex;align-items:center;gap:1px;
+    margin-left:7px;padding-left:7px;
+    border-left:1px solid var(--line);
+  }
   .menu-btn{
     height:28px;padding:0 10px;border-radius:8px;
     font:500 12px var(--ui);letter-spacing:.01em;color:var(--ink-soft);
-    transition:background .12s,color .12s;
+    transition:background .12s,color .12s,box-shadow .12s;
   }
   .menu-btn:hover{background:var(--hover);color:var(--ink)}
-  .menu-btn.open{background:var(--active);color:var(--ink)}
+  .menu-btn.open{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-strong)}
 
   #btn-run{
     width:28px;height:28px;display:grid;place-items:center;flex:none;
@@ -197,6 +203,7 @@
   .fi:hover{background:var(--hover);color:var(--ink)}
   .fi.active{background:var(--green-soft);color:var(--green)}
   .fi.active svg{color:var(--green)}
+  .fi.active .fi-name{font-weight:500}
   .fi.active::before{
     content:'';position:absolute;left:3px;top:7px;bottom:7px;
     width:2px;border-radius:2px;background:var(--green);
@@ -209,7 +216,7 @@
   }
   .fi:hover .fi-x,.fi.active .fi-x{opacity:1}
   .fi .fi-x:hover{background:var(--active);color:var(--ink)}
-  .fi .fi-x svg{width:11px;height:11px}
+  .fi .fi-x svg{width:11px;height:11px;stroke-width:1.6}
   .rename-field{
     flex:1;min-width:0;
     background:var(--card);border:1px solid var(--line-strong);border-radius:7px;
@@ -218,7 +225,7 @@
   }
   .ren-box{
     position:absolute;z-index:9;
-    background:var(--card);border:1px solid var(--line-strong);border-radius:8px;
+    background:var(--pop);border:1px solid var(--line-strong);border-radius:8px;
     color:var(--ink);font:400 12.5px var(--mono);
     padding:3px 9px;outline:none;caret-color:var(--ink);
     box-shadow:var(--shadow-pop);
@@ -264,7 +271,7 @@
   .tab.active .t-x{color:var(--on-ink);opacity:.75}
   .tab .t-x:hover{background:var(--active);color:var(--ink)}
   .tab.active .t-x:hover{background:var(--on-ink-hover);color:var(--on-ink)}
-  .tab .t-x svg{width:10px;height:10px}
+  .tab .t-x svg{width:10px;height:10px;stroke-width:1.6}
 
   #editor-host{flex:1;min-height:0;position:relative;background:var(--card)}
   #editor{position:absolute;inset:0}
@@ -325,7 +332,7 @@
   .line.exc{color:var(--red);font-weight:500}
   .line.echo{color:var(--ink)}
   .line.echo .echo-p{color:var(--muted)}
-  .run-head{color:var(--muted);font-size:11px;margin:10px 0 2px;letter-spacing:.02em;user-select:none}
+  .run-head{color:var(--muted);font-size:11px;margin:12px 0 2px;letter-spacing:.02em;user-select:none}
   .run-head .rh-name{font-weight:500;color:var(--ink-soft)}
   .run-head .rh-time::before{content:' · '}
   .run-head .rh-time:empty{display:none}
@@ -555,7 +562,7 @@
   /* ---------- context menu ---------- */
   .ctx{
     position:fixed;z-index:200;min-width:216px;max-width:280px;
-    background:var(--card);border:1px solid var(--line-strong);border-radius:12px;
+    background:var(--pop);border:1px solid var(--line-strong);border-radius:12px;
     box-shadow:var(--shadow-pop);
     padding:5px;
     animation:ctxIn .18s cubic-bezier(.21,.8,.35,1);
@@ -569,6 +576,8 @@
   }
   .ctx-i svg{width:13.5px;height:13.5px;color:var(--muted);flex:none}
   .ctx-i .ctx-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ctx-check{display:flex;color:var(--green)}
+  .ctx-check svg{width:12px;height:12px;color:var(--green)}
   .ctx-i.sel{background:var(--green-soft);color:var(--green)}
   .ctx-i.sel svg{color:var(--green)}
   .ctx-i.disabled{opacity:.45;pointer-events:none}
@@ -589,7 +598,7 @@
   #toasts{position:fixed;right:14px;bottom:34px;z-index:120;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
   .toast{
     display:flex;align-items:center;gap:12px;
-    background:var(--card);border:1px solid var(--line-strong);border-radius:10px;
+    background:var(--pop);border:1px solid var(--line-strong);border-radius:10px;
     padding:9px 13px;font-size:12.5px;color:var(--ink-soft);
     box-shadow:var(--shadow-pop);
     transform:translateX(10px);opacity:0;

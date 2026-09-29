@@ -48,6 +48,7 @@ const ICONS = {
   moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>',
   plus: SV('<path d="M12 5v14M5 12h14"/>'),
   x: SV('<path d="M6 6l12 12M18 6L6 18"/>'),
+  check: SV('<path d="M20 6 9 17l-5-5"/>'),
   trash: SV('<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>'),
   fileCode: SV('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9.5 13-2 2 2 2"/><path d="m13.5 13 2 2-2 2"/>'),
   terminal: SV('<path d="m5 8 4 4-4 4"/><path d="M12 16.5h7"/>'),
@@ -192,6 +193,7 @@ function ctxShow(x, y, items){
     if (it.disabled) row.classList.add('disabled');
     row.innerHTML = ICONS[it.icon] || '';
     row.appendChild(h('span', 'ctx-label', it.label));
+    if (it.on) { const chk = h('span', 'ctx-check'); chk.innerHTML = ICONS.check; row.appendChild(chk); }
     if (!it.disabled) row.addEventListener('click', () => { const fn = it.fn; ctxClose(); fn(); });
     row.addEventListener('mouseenter', () => { ctxSel = ctxRows.indexOf(row); ctxMark(); });
     ctxEl.appendChild(row);
@@ -247,8 +249,8 @@ const MENUS = {
     { label: 'Duplicate Selection', icon: 'copyPlus', fn: () => runEditorAction('editor.action.duplicateSelection') }
   ],
   view: () => [
-    { label: 'Toggle Sidebar', icon: 'panelLeft', fn: () => toggleSidebar() },
-    { label: 'Toggle Console', icon: 'panelBottom', fn: () => toggleConsole() },
+    { label: 'Show Sidebar', icon: 'panelLeft', on: () => S.prefs.sidebar, fn: () => toggleSidebar() },
+    { label: 'Show Console', icon: 'panelBottom', on: () => S.prefs.console, fn: () => toggleConsole() },
     { sep: true },
     { label: 'Explorer', icon: 'fileCode', fn: () => setView('files', { force: true }) },
     { label: 'Search', icon: 'search', fn: () => setView('search', { force: true }) },
@@ -256,14 +258,14 @@ const MENUS = {
     { label: 'Plots', icon: 'chart', fn: () => setView('plots', { force: true }) },
     { label: 'History', icon: 'history', fn: () => setView('hist', { force: true }) },
     { sep: true },
-    { label: 'Toggle Minimap', icon: 'map', fn: () => toggleMinimap() },
-    { label: 'Toggle Word Wrap', icon: 'wrap', fn: () => toggleWrap() },
+    { label: 'Show Minimap', icon: 'map', on: () => S.prefs.minimap, fn: () => toggleMinimap() },
+    { label: 'Word Wrap', icon: 'wrap', on: () => S.prefs.wordWrap, fn: () => toggleWrap() },
     { sep: true },
     { label: 'Zoom In', icon: 'zoomIn', fn: () => setFont(S.prefs.fontSize + 1) },
     { label: 'Zoom Out', icon: 'zoomOut', fn: () => setFont(S.prefs.fontSize - 1) },
     { label: 'Reset Font Size', icon: 'type', fn: () => resetFont() },
     { sep: true },
-    { label: 'Toggle Dark Mode', icon: 'moon', fn: toggleTheme }
+    { label: 'Dark Mode', icon: 'moon', on: () => S.prefs.theme === 'ink', fn: toggleTheme }
   ],
   run: () => [
     { label: 'Run File', icon: 'play', disabled: !activeFile(), fn: () => run() },
@@ -519,7 +521,7 @@ function editorMenu(x, y){
     { label: 'Find In Files', icon: 'search', fn: openSearch },
     { sep: true },
     { label: 'Ghost Text Settings…', icon: 'wand', fn: openAIModal },
-    { label: 'Toggle Dark Mode', icon: 'moon', fn: toggleTheme },
+    { label: 'Dark Mode', icon: 'moon', on: () => S.prefs.theme === 'ink', fn: toggleTheme },
     { label: 'Command Palette…', icon: 'command', fn: () => openPalette('>') }
   ]);
 }
@@ -2527,7 +2529,7 @@ require(['vs/editor/editor.main'], async function(){
     colors: {
       'editor.background': '#ffffff',
       'editor.foreground': '#161616',
-      'editorLineNumber.foreground': '#c4c0b2',
+      'editorLineNumber.foreground': '#b0aa98',
       'editorLineNumber.activeForeground': '#4a4a48',
       'editorCursor.foreground': '#161616',
       'editor.selectionBackground': '#e6e2d3',
@@ -2596,7 +2598,7 @@ require(['vs/editor/editor.main'], async function(){
     colors: {
       'editor.background': '#201d18',
       'editor.foreground': '#ece7dc',
-      'editorLineNumber.foreground': '#5f594c',
+      'editorLineNumber.foreground': '#7a7263',
       'editorLineNumber.activeForeground': '#b3aca0',
       'editorCursor.foreground': '#ece7dc',
       'editor.selectionBackground': '#34302a',
