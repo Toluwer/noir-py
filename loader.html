@@ -22,17 +22,14 @@ button:hover{color:#161616;background:#faf9f5}
 </head>
 <body>
 <div id="box"><span id="dots"><i></i><i></i><i></i></span><span id="msg">loading noir.py…</span></div>
-<script>
-/* noir.py loader — pulls the latest editor build from github and replaces
-   this page with it. keep this file, share this file. set REPO if you fork. */
-var REPO = "Toluwer/noir-py";        /* owner/repo on github */
+<script>var REPO = "Toluwer/noir-py";
 var FILE = "python-editor.html";
 
 var SOURCES = [
   "https://raw.githubusercontent.com/" + REPO + "/main/" + FILE,
   "https://cdn.jsdelivr.net/gh/" + REPO + "@main/" + FILE,
   "https://cdn.statically.io/gh/" + REPO + "/main/" + FILE,
-  FILE                                  /* last resort: editor next to loader */
+  FILE
 ];
 
 function dead(){
@@ -50,7 +47,7 @@ function grab(url){
     .then(function(r){ return r.ok ? r.text() : Promise.reject(r.status); })
     .then(function(html){
       live();
-      /* sanity: it must look like the editor, not a 404 page or a redirect */
+
       if (html.length < 5000 || !/^<!doctype html/i.test(html) || html.indexOf('id="app"') < 0) throw 0;
       document.open();
       document.write(html);
@@ -62,7 +59,7 @@ function grab(url){
 (async function(){
   for (var i = 0; i < SOURCES.length; i++){
     await grab(SOURCES[i]);
-    if (document.getElementById("app")) return;   /* the editor took over */
+    if (document.getElementById("app")) return;
   }
   dead();
 })();

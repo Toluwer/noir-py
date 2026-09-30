@@ -11,7 +11,16 @@ const css = read('src/style.css');
 let js = read('src/app0.js');
 const kb = s => Buffer.byteLength(s) / 1024;
 
-/* ---------- engine blob: python sources + completion data, deflate+base64url ---------- */
+const noComments = (name, src, markers = []) => {
+  for (const m of markers) src = src.split(m).join('');
+  if (src.includes('/*')) { console.error(`FATAL: /* comment found in ${name}`); process.exit(1); }
+  if (/^\s*\/\//m.test(src)) { console.error(`FATAL: // comment found in ${name}`); process.exit(1); }
+  if (/<!--/.test(src)) { console.error(`FATAL: html comment found in ${name}`); process.exit(1); }
+};
+noComments('src/style.css', css);
+noComments('src/app0.js', js, ["'/*__NOIR_BLOB__*/'"]);
+noComments('src/page.html', page, ["'/*__NOIR_PACK__*/'"]);
+
 const blob = {
   intel: read('src/blob/intel.py'),
   repl: read('src/blob/repl.py'),
@@ -21,14 +30,12 @@ const blob = {
 const blobJson = JSON.stringify(blob);
 const blobB64 = zlib.deflateRawSync(Buffer.from(blobJson, 'utf8')).toString('base64url');
 
-/* round-trip sanity: the exact bytes the browser will inflate must re-inflate identically */
 if (zlib.inflateRawSync(Buffer.from(blobB64, 'base64url')).toString('utf8') !== blobJson) {
   console.error('FATAL: engine blob round-trip mismatch'); process.exit(1);
 }
 if (!js.includes("'/*__NOIR_BLOB__*/'")) { console.error('FATAL: PYBLOB placeholder missing in app0.js'); process.exit(1); }
 js = js.replace("'/*__NOIR_BLOB__*/'", () => "'" + blobB64 + "'");
 
-/* ---------- minify ---------- */
 let mode = 'esbuild', jsOut, cssOut;
 try {
   const es = await import('esbuild');
@@ -41,7 +48,6 @@ try {
     .replace(/\s*([{}:;,>])\s*/g, '$1').replace(/;}/g, '}').trim();
 }
 
-/* ---------- self-extracting pack: {c: css, j: js} -> deflate-raw -> base64url ---------- */
 const packJson = JSON.stringify({ c: cssOut, j: jsOut });
 const packB64 = zlib.deflateRawSync(Buffer.from(packJson, 'utf8')).toString('base64url');
 if (zlib.inflateRawSync(Buffer.from(packB64, 'base64url')).toString('utf8') !== packJson) {
@@ -49,14 +55,12 @@ if (zlib.inflateRawSync(Buffer.from(packB64, 'base64url')).toString('utf8') !== 
 }
 if (!page.includes("'/*__NOIR_PACK__*/'")) { console.error('FATAL: NOIR_PACK placeholder missing in page.html'); process.exit(1); }
 
-/* ---------- assemble single file ---------- */
 let html = page.replace(/\r/g, '')
   .split('\n').map(l => l.trim()).filter(Boolean).join('')
   .replace(/>\s+</g, '><');
 
 html = html.replace("'/*__NOIR_PACK__*/'", () => "'" + packB64 + "'");
 
-/* post-conditions */
 if (html.includes('__NOIR_')) { console.error('FATAL: unresolved placeholder in output'); process.exit(1); }
 if (!html.includes('DecompressionStream')) { console.error('FATAL: loader missing from output'); process.exit(1); }
 if (!html.includes(packB64.slice(0, 64))) { console.error('FATAL: pack payload missing from output'); process.exit(1); }

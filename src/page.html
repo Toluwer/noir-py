@@ -7,8 +7,7 @@
 <meta name="theme-color" content="#f6f5f1">
 <title>noir.py — Python Editor</title>
 <style>html{background:#f5f4ef}html[data-theme=ink]{background:#191713}body{visibility:hidden}</style>
-<script>/* early theme — set before first paint so dark users never get a paper flash */
-try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.theme==='ink')document.documentElement.dataset.theme='ink'}catch(e){}
+<script>try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.theme==='ink')document.documentElement.dataset.theme='ink'}catch(e){}
 </script>
 <noscript><style>body{visibility:visible!important}</style></noscript>
 </head>
@@ -256,13 +255,11 @@ try{var __p=JSON.parse(localStorage.getItem('noir.py:prefs')||'{}');if(__p&&__p.
 
 <input type="file" id="file-pick" accept=".py,.txt" hidden>
 
-<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
-<script src="https://cdn.jsdelivr.net/pyodide/v0.29.5/full/pyodide.js"></script>
-<script>
-/* noir.py self-extracting pack — the app (css + js, minified) is embedded below as one
-   deflate-raw + base64url payload; this bootstrap inflates it, injects the stylesheet
-   and evaluates the app. Everything is still here — just stored compressed. */
-'use strict';
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js">
+</script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.5/full/pyodide.js">
+</script>
+<script>'use strict';
 const NOIR_PACK = '/*__NOIR_PACK__*/';
 (async () => {
   const show = () => { document.body.style.visibility = 'visible'; };

@@ -1,7 +1,5 @@
-
 (function(){
 'use strict';
-/* ---------- constants ---------- */
 
 const MONACO_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs';
 const PYODIDE_BASE = 'https://cdn.jsdelivr.net/pyodide/v0.29.5/full/';
@@ -33,8 +31,6 @@ const app = $('app'), fileListEl = $('file-list'), tabsEl = $('tabs'), tabbarEl 
       stAi = $('st-ai'), stTheme = $('st-theme'), aiModal = $('ai-modal'), aiUrl = $('ai-url'), aiModel = $('ai-model'), aiStatus = $('ai-status'),
       aboutModal = $('about-modal'), abVer = $('ab-ver'), abRun = $('ab-run'),
       aiTestBtn = $('ai-test');
-
-/* ---------- icon set (lucide-style, consistent 2px strokes) ---------- */
 
 const SV = inner => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
 const ICONS = {
@@ -93,7 +89,6 @@ const ICONS = {
 
 document.querySelectorAll('[data-ic]').forEach(n => { n.innerHTML = ICONS[n.dataset.ic] || ''; });
 
-/* favicon: the colorful two-tone python mark — gradients live inside the data-uri document */
 (function(){
   const paths = '<path fill="url(#fA)" fill-rule="evenodd" d="M11.914 0C5.82 0 5.914 2.656 5.914 2.656l.011 2.75h6.107v.827H3.7S0 5.721 0 11.869c0 6.148 3.234 5.912 3.234 5.912h1.929v-2.852s-.104-3.233 3.181-3.233h5.479s3.079.05 3.079-2.976V3.572S17.346 0 11.914 0zM8.19 2.062c.55 0 .994.445.994.993 0 .55-.444.994-.993.994a.995.995 0 0 1-.994-.994c0-.548.445-.993.994-.993z"/><path fill="url(#fB)" fill-rule="evenodd" d="M12.253 23.97c6.094 0 5.999-2.656 5.999-2.656l-.011-2.75h-6.107v-.827h8.332s3.715.421 3.715-5.727c0-6.148-3.235-5.912-3.235-5.912h-1.929v2.852s.104 3.233-3.181 3.233h-5.479s-3.079-.05-3.079 2.976v5.012s-.467 2.799 5.896 2.799zm3.19-2.062a.995.995 0 0 1-.993-.994c0-.548.444-.993.993-.993.55 0 .994.445.994.993 0 .55-.444.994-.994.994z"/>';
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs>' +
@@ -106,10 +101,8 @@ document.querySelectorAll('[data-ic]').forEach(n => { n.innerHTML = ICONS[n.data
   document.head.appendChild(l);
 })();
 
-/* ---------- state ---------- */
-
 const S = {
-  files: [],            /* {id, name, model} */
+  files: [],
   activeId: null,
   uid: 0,
   running: false,
@@ -145,8 +138,6 @@ function updateRunUI(){
   if (!replRow.hidden) hideEmpty();
 }
 
-/* ---------- toasts ---------- */
-
 function toast(msg, action, ms){
   const t = h('div', 'toast');
   t.appendChild(h('span', null, msg));
@@ -159,8 +150,6 @@ function toast(msg, action, ms){
   requestAnimationFrame(() => t.classList.add('on'));
   setTimeout(() => { t.classList.remove('on'); setTimeout(() => t.remove(), 180); }, ms || (action ? 5000 : 2400));
 }
-
-/* ---------- context menu system ---------- */
 
 let ctxEl = null, ctxRows = [], ctxSel = 0, ctxFromMenu = null;
 
@@ -215,7 +204,6 @@ window.addEventListener('mousedown', e => { if (ctxEl && !ctxEl.contains(e.targe
 window.addEventListener('scroll', () => ctxClose(), true);
 window.addEventListener('blur', () => ctxClose());
 
-/* keyboard: menu owns plain keys, but lets browser/editor modifier combos through */
 window.addEventListener('keydown', e => {
   if (!ctxEl) return;
   if (e.ctrlKey || e.metaKey || e.altKey){ ctxClose(); return; }
@@ -225,8 +213,6 @@ window.addEventListener('keydown', e => {
   else if (e.key === 'Escape' || e.key === 'Tab'){ e.preventDefault(); e.stopImmediatePropagation(); ctxClose(); }
   else { e.preventDefault(); e.stopImmediatePropagation(); ctxClose(); }
 }, true);
-
-/* ---------- menu bar — dropdowns reuse the context-menu component ---------- */
 
 const MENUS = {
   file: () => [
@@ -296,8 +282,8 @@ function menuBarShow(btn, name){
   const build = MENUS[name];
   if (!build) return;
   const r = btn.getBoundingClientRect();
-  ctxShow(r.left, r.bottom + 4, build());  /* ctxShow closes any open menu itself */
-  ctxFromMenu = btn;                        /* set after — survives the internal ctxClose */
+  ctxShow(r.left, r.bottom + 4, build());
+  ctxFromMenu = btn;
   btn.classList.add('open');
 }
 
@@ -311,13 +297,11 @@ let menuFocusTimer = 0;
 document.querySelectorAll('.menu-btn').forEach(btn => {
   btn.addEventListener('click', menuBarClick);
   btn.addEventListener('mouseenter', () => {
-    if (!ctxFromMenu) return; /* follow-hover only while a menu is already open */
+    if (!ctxFromMenu) return;
     clearTimeout(menuFocusTimer);
     menuFocusTimer = setTimeout(() => { if (ctxFromMenu && ctxFromMenu !== btn) menuBarShow(btn, btn.dataset.menu); }, 60);
   });
 });
-
-/* editor clipboard + menu */
 
 function clipCopySel(){
   const sel = editor.getSelection();
@@ -352,8 +336,6 @@ function runEditorAction(id){
 }
 
 function escapeRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-
-/* ---------- rename symbol (F2) — custom inline box, cross-file ---------- */
 
 let renameBox = null;
 
@@ -437,13 +419,11 @@ function renameSymbolAt(){
 }
 
 function gotoDefAction(){
-  /* monaco standalone has no revealDefinition action — navigate ourselves */
+
   gotoDefAt();
 }
 function findRefsAction(){ findRefsAt(); }
 function quickOutlineAction(){ runEditorAction('editor.action.quickOutline'); }
-
-/* ---------- go to definition / find references (F12 / Shift+F12) ---------- */
 
 function flashLineAs(line, cls){
   if (!editor || !editor.getModel()) return;
@@ -528,8 +508,6 @@ function editorMenu(x, y){
   ]);
 }
 
-/* file menu (sidebar + tabs) */
-
 function duplicateFile(f){
   const names = new Set(S.files.map(o => o.name));
   const base = f.name.replace(/\.py$/i, '');
@@ -601,8 +579,6 @@ function fileMenu(x, y, f, fromTab){
   ]);
 }
 
-/* console menu */
-
 function saveConsoleOutput(){
   const parts = [];
   conBody.querySelectorAll('.line:not(#con-empty), .in-row').forEach(n => parts.push(n.textContent));
@@ -635,8 +611,6 @@ conBody.addEventListener('contextmenu', e => {
   consoleMenu(e.clientX, e.clientY);
 });
 
-/* variables-row menu */
-
 function varMenu(x, y, name, val){
   ctxShow(x, y, [
     { label: 'Insert At Cursor', icon: 'insert', fn: () => insertName(name) },
@@ -647,8 +621,6 @@ function varMenu(x, y, name, val){
   ]);
 }
 
-/* empty-state menu */
-
 emptyState.addEventListener('contextmenu', e => {
   e.preventDefault();
   ctxShow(e.clientX, e.clientY, [
@@ -658,8 +630,6 @@ emptyState.addEventListener('contextmenu', e => {
     { label: 'Command Palette…', icon: 'command', fn: () => openPalette('>') }
   ]);
 });
-
-/* ---------- workspace persistence ---------- */
 
 function saveWS(){
   try {
@@ -691,7 +661,6 @@ function loadWS(){
 function loadPrefs(){ try { Object.assign(S.prefs, JSON.parse(localStorage.getItem(PREF_KEY) || '{}')); } catch (e) {} }
 function savePrefs(){ try { localStorage.setItem(PREF_KEY, JSON.stringify(S.prefs)); } catch (e) {} }
 
-/* ---------- theme: paper (light) / ink (dark) ---------- */
 function applyTheme(t, save){
   S.prefs.theme = t === 'ink' ? 'ink' : 'paper';
   const dark = S.prefs.theme === 'ink';
@@ -707,8 +676,6 @@ function toggleTheme(){
   applyTheme(S.prefs.theme === 'ink' ? 'paper' : 'ink');
   toast(S.prefs.theme === 'ink' ? 'Theme — Ink' : 'Theme — Paper');
 }
-
-/* ---------- file operations ---------- */
 
 function refreshChrome(){
   renderSidebar();
@@ -790,7 +757,7 @@ function switchTo(id){
   refreshChrome();
   saveWS();
   if (S.view === 'hist') renderHist();
-  /* on small screens, sliding the drawer away is session-only — never poison the saved pref */
+
   if (window.innerWidth < 860 && S.prefs.sidebar){
     S.prefs.sidebar = false;
     app.classList.add('no-sidebar');
@@ -896,8 +863,6 @@ function refreshStatusBtns(){
   stEol.textContent = m.getEOL() === '\n' ? 'LF' : 'CRLF';
 }
 
-/* ---------- open / download / view options ---------- */
-
 function importFile(file){
   if (!file || !S.monacoReady || !/\.(py|txt)$/i.test(file.name)) return;
   file.text().then(t => {
@@ -927,8 +892,6 @@ function downloadFile(){
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   toast('Downloaded ' + f.name);
 }
-
-/* ---------- share link (deflate + base64url in the URL hash — no server) ---------- */
 
 function b64e(bytes){
   let s = '';
@@ -981,7 +944,6 @@ async function copyShareLink(){
   }
 }
 
-/* deep link: #name=foo.py&code=<deflate+base64url> opens as a shared file */
 async function importHash(){
   if (!location.hash || location.hash.length < 2) return false;
   let p;
@@ -995,7 +957,7 @@ async function importHash(){
   } catch (e) { return false; }
   let name = p.get('name') || 'shared.py';
   if (!/^[\w.\- ]{1,40}\.py$/i.test(name)) name = 'shared.py';
-  /* never collide with an existing file — monaco models are keyed by uri */
+
   const names = new Set(S.files.map(f => f.name));
   if (names.has(name)){
     let i = 2;
@@ -1009,8 +971,6 @@ async function importHash(){
   toast('Opened Shared File');
   return true;
 }
-
-/* ---------- install packages from PyPI via micropip ---------- */
 
 async function installPackage(name){
   name = String(name || '').trim();
@@ -1033,8 +993,6 @@ async function installPackage(name){
     st('Install Failed', false);
   }
 }
-
-/* ---------- copy console output ---------- */
 
 function copyOutput(){
   const parts = [];
@@ -1077,8 +1035,6 @@ function toggleWrap(){
   savePrefs();
   toast('Word Wrap ' + (S.prefs.wordWrap ? 'On' : 'Off'));
 }
-
-/* ---------- console engine (line-buffered terminal) ---------- */
 
 const decoder = new TextDecoder();
 
@@ -1157,8 +1113,6 @@ function runHead(name){
   if (stick) conBody.scrollTop = conBody.scrollHeight;
 }
 
-/* ---------- inline console input (no native prompt) ---------- */
-
 window._consoleInput = function(prompt){
   return new Promise(resolve => {
     openConsole();
@@ -1214,8 +1168,6 @@ conBody.addEventListener('click', () => {
   if (S.inputField) S.inputField.focus();
   else if (S.pyReady && !S.running) replField.focus();
 });
-
-/* ---------- REPL prompt line ---------- */
 
 function replEcho(v){
   hideEmpty();
@@ -1276,8 +1228,6 @@ replField.addEventListener('keydown', e => {
     else if (editor) editor.focus();
   }
 });
-
-/* ---------- traceback rendering ---------- */
 
 function cleanErr(msg){
   const t = String(msg)
@@ -1362,8 +1312,6 @@ function jumpErrLine(n){
   flashLine(line);
 }
 
-/* ---------- run ---------- */
-
 async function run(){
   const f = activeFile();
   if (!f){ toast('No File Open'); return; }
@@ -1372,7 +1320,6 @@ async function run(){
   runCode(code, f.name, f);
 }
 
-/* run an arbitrary code fragment under the file's namespace (used by Run File / Run Selection / hooks) */
 async function runCode(code, label, file, lineOff){
   if (S.running) return;
   if (!S.pyReady){ toast('Python Runtime Is Still Loading…'); return; }
@@ -1412,7 +1359,6 @@ async function runCode(code, label, file, lineOff){
   }
 }
 
-/* run only the selection — or the current line when nothing is selected */
 async function runSelection(){
   if (!editor || !activeFile()){ toast('No File Open'); return; }
   const model = editor.getModel();
@@ -1433,8 +1379,6 @@ async function runSelection(){
   if (!code.trim()){ toast('Nothing Selected To Run'); return; }
   runCode(code, label, f, off);
 }
-
-/* ---------- console panel: toggle, resize, clear, restart ---------- */
 
 function toggleSidebar(force){
   S.prefs.sidebar = force !== undefined ? force : !S.prefs.sidebar;
@@ -1478,7 +1422,7 @@ grip.addEventListener('dblclick', () => toggleConsole(false));
 
 window.addEventListener('resize', () => {
   if (S.prefs.console) setConH(S.prefs.conH);
-  /* entering phone width slides the drawer away (session-only, pref untouched) */
+
   if (window.innerWidth < 860 && S.prefs.sidebar){
     S.prefs.sidebar = false;
     app.classList.add('no-sidebar');
@@ -1523,8 +1467,6 @@ stEol.addEventListener('click', () => {
   refreshStatusBtns();
 });
 stPy.addEventListener('click', () => toast('Python ' + pyVersion + ' · Pyodide ' + PYODIDE_VERSION));
-
-/* ---------- command palette ---------- */
 
 const COMMANDS = [
   { label: 'Run File', icon: 'play', fn: () => run() },
@@ -1689,14 +1631,14 @@ function insertSnippetAtCursor(sn){
   if (!editor || !activeFile()){ toast('No File Open'); return; }
   const model = editor.getModel();
   if (!model){ toast('No File Open'); return; }
-  GHOST.cool = Date.now() + 1600; /* Tab must serve snippet tabstops, not ghost accept */
+  GHOST.cool = Date.now() + 1600;
   editor.focus();
   const pos = editor.getPosition();
   if (!pos) return;
   const before = model.getValue();
   try { editor.trigger('noir', 'editor.action.insertSnippet', { snippet: sn.i }); } catch (e) {}
   if (model.getValue() === before){
-    /* fallback: strip tabstops and insert as plain text */
+
     const plain = sn.i.replace(/\$\{(\d+):([^}]*)\}/g, '$2').replace(/\$\d+/g, '');
     editor.executeEdits('noir', [{ range: editor.getSelection(), text: plain }]);
   }
@@ -1712,8 +1654,6 @@ palField.addEventListener('keydown', e => {
   else if (e.key === 'Escape'){ e.preventDefault(); closePalette(); }
 });
 pal.addEventListener('mousedown', e => { if (e.target === pal) closePalette(); });
-
-/* ---------- global shortcuts ---------- */
 
 window.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !aiModal.hidden){ e.preventDefault(); closeAIModal(); return; }
@@ -1781,15 +1721,11 @@ window.addEventListener('keydown', e => {
 
 window.addEventListener('beforeunload', saveWS);
 
-/* ---------- drag & drop .py files ---------- */
-
 window.addEventListener('dragover', e => e.preventDefault());
 window.addEventListener('drop', e => {
   e.preventDefault();
   importFile(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
 });
-
-/* ---------- sidebar views (activity rail) ---------- */
 
 const VIEWS = { files: 'Explorer', search: 'Search', vars: 'Variables', plots: 'Plots', hist: 'History' };
 
@@ -1830,7 +1766,6 @@ $('rail-vars').addEventListener('click', () => setView('vars'));
 $('rail-plots').addEventListener('click', () => setView('plots'));
 $('rail-hist').addEventListener('click', () => setView('hist'));
 
-/* ---------- variables inspector ---------- */
 function varRow(name, type, val, len){
   const r = h('div', 'vv-row');
   r.appendChild(h('span', 'vv-n', name));
@@ -1880,8 +1815,6 @@ function insertName(name){
 }
 
 $('vv-refresh').addEventListener('click', refreshVars);
-
-/* ---------- plots (matplotlib figure capture) ---------- */
 
 let PLOTS = [], pwIx = 0, plotsSeen = false;
 
@@ -1968,8 +1901,6 @@ pwSize.addEventListener('click', togglePlotSize);
 $('pw-dl').addEventListener('click', downloadPlot);
 $('pw-close').addEventListener('click', closePlot);
 
-/* ---------- format document (black, installed on demand) ---------- */
-
 async function formatDocument(){
   const f = activeFile();
   if (!f){ toast('No File Open'); return; }
@@ -2013,8 +1944,6 @@ async function formatDocument(){
   scheduleLintFor(m);
   toast('Formatted With Black');
 }
-
-/* ---------- search across files ---------- */
 
 const SR = { re: false, cs: false, res: [], total: 0, files: 0 };
 let srTimer = 0;
@@ -2116,8 +2045,6 @@ srQ.addEventListener('keydown', e => {
 });
 srR.addEventListener('keydown', e => e.stopPropagation());
 
-/* ---------- file history (snapshots + diff) ---------- */
-
 const SNAP = {};
 
 function pushSnap(fileId, text){
@@ -2197,8 +2124,6 @@ function restoreDiff(){
 $('dw-close').addEventListener('click', closeDiff);
 $('dw-restore').addEventListener('click', restoreDiff);
 
-/* ---------- lint (diagnostics) ---------- */
-
 const LINT_OWNER = 'noir';
 let lintTimer = 0;
 
@@ -2277,8 +2202,6 @@ function nextProblem(back){
 
 stProb.addEventListener('click', () => nextProblem(false));
 
-/* ---------- profile (cProfile) ---------- */
-
 async function profileFile(){
   const f = activeFile();
   if (!f){ toast('No File Open'); return; }
@@ -2314,18 +2237,13 @@ async function profileFile(){
   if (S.view === 'vars') refreshVars();
 }
 
-/* ---------- python-side introspection & runner ---------- */
-
-/* The python engine (intel.py / repl.py) and fallback completion data (data.json)
-   live in src/blob/ — the build embeds them as ONE deflate+base64url payload
-   which loadBlob() inflates here before first use. Same code, smaller file. */
 const PYBLOB_B64 = '/*__NOIR_BLOB__*/';
 let PYBLOB = null;
 async function loadBlob(){
   if (PYBLOB) return PYBLOB;
   try { PYBLOB = JSON.parse(await inflate(b64d(PYBLOB_B64))); }
   catch (e) {
-    /* degraded mode: editor still works, engine/completions disabled */
+
     PYBLOB = { intel: '', repl: '', tools: '', kw: [], sn: [], fm: [], fn: [] };
     openConsole();
     appendLine('Engine Data Failed To Load — Rebuild The File', 'err');
@@ -2334,7 +2252,7 @@ async function loadBlob(){
 }
 
 let stdlibMods = null;
-let SNIPS = [];   /* snippet catalog — filled once monaco+engine are ready */
+let SNIPS = [];
 
 function py(fn, arg, arg2){
   if (!S.pyReady) return null;
@@ -2386,10 +2304,6 @@ function chainAt(line, col){
   return chain && !chain.includes('..') ? chain : null;
 }
 
-/* Backward scanner for the expression before a trailing `.member` — supports
-   identifier chains (a.b), string/bytes literals ("x".upper, f"{x}".title),
-   subscripts (xs[0].count, d["k"].get) and plain parens ((x).real).
-   Calls (foo(x).m) are deliberately NOT evaluated (side effects). */
 function dotBase(line){
   const m = line.match(/\.(\w*)$/);
   if (!m) return null;
@@ -2427,8 +2341,6 @@ function dotBase(line){
   }
   return ok && i < end ? { expr: line.slice(i, end), suffix: m[1], len: m[1].length } : null;
 }
-
-/* ---------- ghost text state + AI settings modal ---------- */
 
 const GHOST = { cool: 0, shown: null, llmCache: null, llmTimer: 0, llmReq: null, ck: null, calls: 0 };
 const ghostLineCache = new Map();
@@ -2498,8 +2410,6 @@ aiTestBtn.addEventListener('click', () => {
     });
 });
 
-/* ---------- about dialog ---------- */
-
 function openAbout(){
   abVer.textContent = APP_VERSION;
   abRun.textContent = S.pyReady ? 'Python ' + pyVersion + ' · Pyodide ' + PYODIDE_VERSION : 'Pyodide ' + PYODIDE_VERSION;
@@ -2509,8 +2419,6 @@ function closeAbout(){ aboutModal.hidden = true; if (editor) editor.focus(); }
 
 $('ab-x').addEventListener('click', closeAbout);
 aboutModal.addEventListener('mousedown', e => { if (e.target === aboutModal) closeAbout(); });
-
-/* ---------- monaco ---------- */
 
 window.MonacoEnvironment = {
   getWorkerUrl: function(){
@@ -2526,11 +2434,10 @@ require.config({ paths: { vs: MONACO_BASE } });
 require(['vs/editor/editor.main'], async function(){
 
   await loadBlob();
-  /* completion fallback data (keywords / snippets / modules / names) comes from the blob */
+
   const KEYWORDS = PYBLOB.kw, SNIPPETS = PYBLOB.sn, FALLBACK_MODULES = PYBLOB.fm, FALLBACK_NAMES = PYBLOB.fn;
   SNIPS = SNIPPETS;
 
-  /* paper & ink — syntax colors stay inside the palette: ink + green + amber, muted comments */
   monaco.editor.defineTheme('paper', {
     base: 'vs',
     inherit: true,
@@ -2721,15 +2628,11 @@ require(['vs/editor/editor.main'], async function(){
 
   S.monacoReady = true;
 
-  /* ghost text: Tab accepts the visible inline suggestion (context-keyed so plain
-     Tab keeps indenting / serving snippet tabstops when no ghost is shown;
-     when the suggest widget is open, Tab defers to it instead) */
   try {
     GHOST.ck = editor.createContextKey('noirGhostVisible', false);
     editor.addCommand(monaco.KeyCode.Tab, ghostAccept, 'noirGhostVisible && !suggestWidgetVisible');
   } catch (e) {}
 
-  /* load workspace */
   const ws = loadWS();
   const seenNames = new Set();
   for (const f of ws.files){
@@ -2740,7 +2643,7 @@ require(['vs/editor/editor.main'], async function(){
   }
   const target = S.files.find(f => f.name === ws.active) || S.files[0];
   if (target) switchTo(target.id); else refreshChrome();
-  /* open shared deep link (#name=…&code=…) if present — runs after the saved workspace */
+
   importHash();
 
   editor.onDidChangeCursorPosition(e => {
@@ -2772,7 +2675,6 @@ require(['vs/editor/editor.main'], async function(){
     document.fonts.ready.then(() => monaco.editor.remeasureFonts());
   }
 
-  /* right-click in the editor opens the custom menu instead of monaco's built-in one */
   $('editor').addEventListener('contextmenu', e => {
     e.preventDefault();
     if (!editor.getModel()) return;
@@ -2788,8 +2690,6 @@ require(['vs/editor/editor.main'], async function(){
   editor.focus();
   renderView();
   if (S.pyReady) for (const f of S.files) lintModel(f.model);
-
-  /* ---------- IntelliSense providers ---------- */
 
   const K = () => monaco.languages.CompletionItemKind;
   const KINDS = () => ({
@@ -2895,8 +2795,6 @@ require(['vs/editor/editor.main'], async function(){
     }
   });
 
-  /* ================= ghost text — inline suggestions ================= */
-
   function ghostModelLines(m){
     const key = m.uri.toString();
     const ver = m.getAlternativeVersionId();
@@ -2906,7 +2804,6 @@ require(['vs/editor/editor.main'], async function(){
   }
   const indentOf = s => (s.match(/^[ \t]*/) || [''])[0].length;
 
-  /* split "print(to" -> base "print(" + partial "to" (for word-boundary-relaxed matching) */
   function ghostSplit(p){
     let cut = -1;
     for (let i = p.length - 1; i >= 0; i--){
@@ -2934,7 +2831,7 @@ require(['vs/editor/editor.main'], async function(){
           rem = L.slice(base.length + partial.length); rel = true;
         }
         if (rem == null || !rem.trim() || rem.length > 100) continue;
-        if (rem.length === 1 && rem !== ':') continue; /* 1-char ghosts only for block headers */
+        if (rem.length === 1 && rem !== ':') continue;
         if (same && i === ln) continue;
         const k = (rel ? 'R' : 'E') + '|' + (rel ? L.slice(base.length) : rem);
         let r = rows.find(x => x.k === k);
@@ -2952,7 +2849,7 @@ require(['vs/editor/editor.main'], async function(){
               range: new monaco.Range(ln, base.length + 1, ln, prefix.length + 1) }
           : { insertText: r.rem });
       }
-      /* block extension: a header line elsewhere → offer its whole body as a richer option */
+
       if (!r.rel && /:\s*$/.test(r.line) && r.li < r.lines.length - 1){
         const ind = indentOf(r.line), blk = [r.line];
         for (let j = r.li + 1; j < r.lines.length && j <= r.li + 5; j++){
@@ -2972,7 +2869,6 @@ require(['vs/editor/editor.main'], async function(){
     return out;
   }
 
-  /* high-precision idiom templates — [regex, builder] */
   const GHOST_IDIOMS = [
     [/^#!\/usr\/bin\/env$/, () => ' python3'],
     [/^(\s*)if __name__ ==$/, () => " '__main__':"],
@@ -3130,8 +3026,6 @@ require(['vs/editor/editor.main'], async function(){
     }
   });
 
-  /* ---------- symbol / definition / reference providers (F12, Shift+F12, Ctrl+Shift+O) ---------- */
-
   monaco.languages.registerDocumentSymbolProvider('python', {
     provideDocumentSymbols(model){
       if (!S.pyReady) return [];
@@ -3185,8 +3079,6 @@ require(['vs/editor/editor.main'], async function(){
   });
 });
 
-/* ---------- pyodide boot ---------- */
-
 async function initPyodide(){
   try {
     pyodide = await loadPyodide({ indexURL: PYODIDE_BASE });
@@ -3219,8 +3111,6 @@ async function initPyodide(){
   }
 }
 
-/* ---------- boot ---------- */
-
 loadPrefs();
 applyTheme(S.prefs.theme, false);
 if (!S.prefs.ai || !S.prefs.ai.mode) S.prefs.ai = { mode: 'local', url: 'http://localhost:11434', model: 'qwen2.5-coder:1.5b' };
@@ -3238,7 +3128,6 @@ if (window.innerWidth < 860){
 st('Loading Runtime…', true);
 initPyodide();
 
-/* debug / automation hooks */
 window.noir = {
   run: run,
   runCode: runCode,
