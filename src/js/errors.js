@@ -56,12 +56,12 @@ function appendErrLink(text, line){
 }
 
 let flashDeco = null;
-function flashLine(line){
+function flashLineAs(line, cls){
   if (!editor || !editor.getModel()) return;
   if (flashDeco) flashDeco.clear();
   flashDeco = editor.createDecorationsCollection([{
     range: new monaco.Range(line, 1, line, 1),
-    options: { isWholeLine: true, className: 'err-flash' }
+    options: { isWholeLine: true, className: cls }
   }]);
   setTimeout(() => { if (flashDeco){ flashDeco.clear(); flashDeco = null; } }, 2000);
 }
@@ -78,6 +78,6 @@ function jumpErrLine(n){
   editor.setSelection(new monaco.Range(line, 1, line, m.getLineMaxColumn(line)));
   editor.setPosition({ lineNumber: line, column: 1 });
   editor.focus();
-  flashLine(line);
+  flashLineAs(line, 'err-flash');
 }
 

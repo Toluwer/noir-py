@@ -15,7 +15,7 @@ function renderHist(){
   if (!f){ hvList.dataset.empty = 'No File Open'; return; }
   const arr = SNAP[f.id] || [];
   if (!arr.length){ hvList.dataset.empty = 'No Snapshots Yet — One Is Taken Each Time You Run A File'; return; }
-  const cur = f.model.getValue();
+  const cur = f.model ? f.model.getValue() : '';
   for (const s of [...arr].reverse()){
     const row = h('div', 'hv-row');
     const d = new Date(s.t);
@@ -32,6 +32,7 @@ function renderHist(){
 let diffEd = null, dwCur = null;
 
 function openDiff(f, snap){
+  if (!plotWrap.hidden) closePlot();
   const d = new Date(snap.t);
   dwLabel.textContent = f.name + ' · Snapshot ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   diffWrap.hidden = false;

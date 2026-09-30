@@ -47,7 +47,7 @@ function writeText(text, type){
     const seg = parts[i];
     const last = i === parts.length - 1;
     if (last && seg === '') break;
-    if (S.openLine && S.openLine.dataset.t !== type) S.openLine = null;
+    if (S.openLine && (!S.openLine.isConnected || S.openLine.dataset.t !== type)) S.openLine = null;
     if (!S.openLine){
       S.openLine = document.createElement('div');
       S.openLine.className = 'line' + (type === 'err' ? ' err' : type === 'dim' ? ' dim' : '');

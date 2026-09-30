@@ -9,7 +9,7 @@ async function installPackage(name){
   try {
     await pyodide.loadPackage('micropip');
     const micropip = pyodide.pyimport('micropip');
-    await micropip.install(name);
+    try { await micropip.install(name); } finally { micropip.destroy(); }
     stdlibMods = null;
     appendLine('Installed ' + name + ' — ' + Object.keys(pyodide.loadedPackages).length + ' Packages Loaded', 'dim');
     st('Installed ' + name, false);

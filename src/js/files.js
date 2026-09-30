@@ -98,7 +98,7 @@ function deleteFile(id){
   const i = S.files.findIndex(f => f.id === id);
   if (i < 0) return;
   const f = S.files[i];
-  const snap = { name: f.name, content: f.model.getValue(), at: i };
+  const snap = { name: f.name, content: f.model ? f.model.getValue() : '', at: i };
   if (S.activeId === id && editor) editor.setModel(null);
   if (dwCur && dwCur.f === f) closeDiff();
   disposeModel(f.model);

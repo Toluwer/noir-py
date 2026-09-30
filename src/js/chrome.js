@@ -4,7 +4,7 @@ function applyTheme(t, save){
   document.documentElement.dataset.theme = S.prefs.theme;
   document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
   const m = document.querySelector('meta[name="theme-color"]');
-  if (m) m.setAttribute('content', dark ? '#191713' : '#f6f5f1');
+  if (m) m.setAttribute('content', dark ? '#15130f' : '#f5f4ef');
   if (stTheme) stTheme.textContent = dark ? 'Ink' : 'Paper';
   try { if (window.monaco && monaco.editor && monaco.editor.setTheme) monaco.editor.setTheme(dark ? 'ink' : 'paper'); } catch (e) {}
   if (save !== false) savePrefs();

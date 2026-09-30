@@ -78,7 +78,7 @@ function renderPal(){
   palItems = [];
   if (isInst){
     const name = raw.slice(7).trim();
-    if (name) palItems.push({ label: 'Install "' + name + '" From PyPI', icon: 'box', hl: [], fn: () => installPackage(name) });
+    if (name) palItems.push({ label: 'Install "' + name + '" From PyPI', icon: 'box', hl: [], sc: 0, fn: () => installPackage(name) });
   } else if (isSym){
     const f = activeFile();
     if (f && S.pyReady){
@@ -86,7 +86,7 @@ function renderPal(){
       const syms = py('outline_flat', f.model.getValue()) || [];
       for (const s of syms){
         const m = fuzzy(sq, s.p);
-        if (m) palItems.push({ label: s.p, icon: s.k === 'class' ? 'fileCode' : 'listTree', hl: m.idxs, fn: () => {
+        if (m) palItems.push({ label: s.p, icon: s.k === 'class' ? 'fileCode' : 'listTree', hl: m.idxs, sc: m.score, fn: () => {
           switchTo(f.id);
           editor.revealLineInCenter(s.l);
           editor.setPosition({ lineNumber: s.l, column: 1 });
@@ -98,21 +98,21 @@ function renderPal(){
     const sq = raw.slice(1).trim();
     for (const sn of SNIPS){
       const m = fuzzy(sq, sn.l + ' ' + (sn.d || ''));
-      if (m) palItems.push({ label: sn.l, icon: 'insert', hl: m.idxs.filter(i => i < sn.l.length), fn: () => insertSnippetAtCursor(sn) });
+      if (m) palItems.push({ label: sn.l, icon: 'insert', hl: m.idxs.filter(i => i < sn.l.length), sc: m.score, fn: () => insertSnippetAtCursor(sn) });
     }
   } else if (isCmd){
     const sq = raw.slice(1).trim();
     for (const c of COMMANDS){
       const m = fuzzy(sq, c.label);
-      if (m) palItems.push({ label: c.label, icon: c.icon, hl: m.idxs, fn: c.fn });
+      if (m) palItems.push({ label: c.label, icon: c.icon, hl: m.idxs, sc: m.score, fn: c.fn });
     }
   } else {
     for (const f of S.files){
       const m = fuzzy(q, f.name);
-      if (m) palItems.push({ label: f.name, icon: 'python', hl: m.idxs, fn: () => switchTo(f.id) });
+      if (m) palItems.push({ label: f.name, icon: 'python', hl: m.idxs, sc: m.score, fn: () => switchTo(f.id) });
     }
   }
-  palItems.sort((a, b) => a.label.localeCompare(b.label));
+  palItems.sort((a, b) => (b.sc || 0) - (a.sc || 0) || a.label.localeCompare(b.label));
   palSel = 0;
   palList.textContent = '';
   palList.appendChild(h('div', 'pal-sec', isCmd ? 'Commands' : isInst ? 'PyPI Package' : isSym ? 'Symbols' : isSnip ? 'Snippets' : 'Files'));

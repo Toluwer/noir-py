@@ -48,6 +48,7 @@ function renderPlots(){
 
 function openPlot(i){
   if (!PLOTS.length) return;
+  if (!diffWrap.hidden) closeDiff();
   pwIx = Math.max(0, Math.min(i, PLOTS.length - 1));
   const p = PLOTS[pwIx];
   pwImg.src = 'data:image/png;base64,' + p.png;

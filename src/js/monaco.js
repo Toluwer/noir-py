@@ -1,9 +1,13 @@
+let monacoWorkerUrl = null;
 window.MonacoEnvironment = {
   getWorkerUrl: function(){
-    return URL.createObjectURL(new Blob([
-      "self.MonacoEnvironment={baseUrl:'" + MONACO_BASE + "'};" +
-      "importScripts('" + MONACO_BASE + "/base/worker/workerMain.js');"
-    ], { type: 'text/javascript' }));
+    if (!monacoWorkerUrl){
+      monacoWorkerUrl = URL.createObjectURL(new Blob([
+        "self.MonacoEnvironment={baseUrl:'" + MONACO_BASE + "'};" +
+        "importScripts('" + MONACO_BASE + "/base/worker/workerMain.js');"
+      ], { type: 'text/javascript' }));
+    }
+    return monacoWorkerUrl;
   }
 };
 
@@ -208,7 +212,7 @@ require(['vs/editor/editor.main'], async function(){
 
   try {
     GHOST.ck = editor.createContextKey('noirGhostVisible', false);
-    editor.addCommand(monaco.KeyCode.Tab, ghostAccept, 'noirGhostVisible && !suggestWidgetVisible');
+    editor.addCommand(monaco.KeyCode.Tab, ghostAccept, 'noirGhostVisible && !suggestWidgetVisible && !inSnippetMode');
   } catch (e) {}
 
   const ws = loadWS();
@@ -630,6 +634,7 @@ require(['vs/editor/editor.main'], async function(){
       const files = [...S.files].sort((a, b) => (b.id === S.activeId) - (a.id === S.activeId));
       for (const pass of [defRe, asgRe]){
         for (const f of files){
+          if (!f.model || f.model.isDisposed()) continue;
           let ms = [];
           try { ms = f.model.findMatches(pass, false, true, true, null, false, 1); } catch (e) {}
           if (ms.length){
@@ -648,6 +653,7 @@ require(['vs/editor/editor.main'], async function(){
       if (!w) return null;
       const out = [];
       for (const f of S.files){
+        if (!f.model || f.model.isDisposed()) continue;
         let ms = [];
         try { ms = f.model.findMatches(w.word, false, false, true, null, false, 400); } catch (e) {}
         for (const m of ms) out.push({ uri: f.model.uri, range: new monaco.Range(m.range.startLineNumber, m.range.startColumn, m.range.endLineNumber, m.range.endColumn) });

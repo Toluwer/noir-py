@@ -11,6 +11,7 @@ function runSearch(){
   let bad = false;
   if (q){
     for (const f of S.files){
+      if (!f.model || f.model.isDisposed()) continue;
       let ms = [];
       try { ms = f.model.findMatches(q, false, SR.re, SR.cs, null, false, 400); }
       catch (e){ bad = true; }

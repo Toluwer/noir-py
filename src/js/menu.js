@@ -59,7 +59,7 @@ window.addEventListener('keydown', e => {
   else if (e.key === 'ArrowUp'){ e.preventDefault(); e.stopImmediatePropagation(); ctxMove(-1); }
   else if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); e.stopImmediatePropagation(); const row = ctxRows[ctxSel]; if (row) row.click(); }
   else if (e.key === 'Escape' || e.key === 'Tab'){ e.preventDefault(); e.stopImmediatePropagation(); ctxClose(); }
-  else { e.preventDefault(); e.stopImmediatePropagation(); ctxClose(); }
+  else ctxClose();
 }, true);
 
 const MENUS = {

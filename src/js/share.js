@@ -34,7 +34,7 @@ async function buildShareLink(){
   p.set('name', f.name);
   try { p.set('code', b64e(await deflate(code))); }
   catch (e) { p.set('code', 'raw,' + b64e(new TextEncoder().encode(code))); }
-  const url = location.origin + location.pathname + '#' + p.toString();
+  const url = location.href.split('#')[0] + '#' + p.toString();
   if (url.length > 30000) throw new Error('File Too Large To Share');
   return url;
 }

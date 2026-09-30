@@ -120,16 +120,6 @@ function gotoDefAction(){
 function findRefsAction(){ findRefsAt(); }
 function quickOutlineAction(){ runEditorAction('editor.action.quickOutline'); }
 
-function flashLineAs(line, cls){
-  if (!editor || !editor.getModel()) return;
-  if (flashDeco) flashDeco.clear();
-  flashDeco = editor.createDecorationsCollection([{
-    range: new monaco.Range(line, 1, line, 1),
-    options: { isWholeLine: true, className: cls }
-  }]);
-  setTimeout(() => { if (flashDeco){ flashDeco.clear(); flashDeco = null; } }, 2000);
-}
-
 function symbolWord(){
   if (!editor || !editor.getModel()) return null;
   const pos = editor.getPosition();

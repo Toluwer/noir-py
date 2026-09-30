@@ -9,6 +9,7 @@ async function formatDocument(){
   updateRunUI();
   stLeft.classList.add('run');
   st('Formatting…', true);
+  await new Promise(r => setTimeout(r, 40));
   let r = null;
   try {
     r = py('format', src);
@@ -19,7 +20,7 @@ async function formatDocument(){
       try {
         await pyodide.loadPackage('micropip');
         const micropip = pyodide.pyimport('micropip');
-        await micropip.install('black');
+        try { await micropip.install('black'); } finally { micropip.destroy(); }
         appendLine('Installed Black — ' + Object.keys(pyodide.loadedPackages).length + ' Packages Loaded', 'dim');
         r = py('format', src);
       } catch (e) {

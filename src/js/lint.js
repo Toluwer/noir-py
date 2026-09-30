@@ -87,9 +87,11 @@ async function profileFile(){
   updateRunUI();
   stLeft.classList.add('run');
   st('Profiling ' + f.name + '…', true);
+  await new Promise(r => setTimeout(r, 40));
   openConsole();
   runHead('Profile · ' + f.name);
   S.lastTrace = { id: f.id, off: 0 };
+  pushSnap(f.id, code);
   const t0 = performance.now();
   let out = null, errTxt = null;
   try {

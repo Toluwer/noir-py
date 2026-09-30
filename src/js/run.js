@@ -87,12 +87,14 @@ function setConH(px){
 function clearConsole(){
   linesEl.querySelectorAll('.line:not(#con-empty), .in-row').forEach(n => n.remove());
   S.openLine = null;
+  if (S.inputField && !S.inputField.isConnected) S.inputField = null;
   conEmpty.hidden = !replRow.hidden;
 }
 
 function restartRuntime(){ saveWS(); location.reload(); }
 
 $('btn-sidebar').addEventListener('click', () => toggleSidebar());
+$('sb-scrim').addEventListener('click', () => toggleSidebar(false));
 $('btn-console').addEventListener('click', () => toggleConsole());
 $('btn-newfile').addEventListener('click', newFile);
 $('btn-newtab').addEventListener('click', newFile);
