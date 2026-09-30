@@ -1,6 +1,6 @@
 {
   "name": "noir-py",
-  "version": "15.0.0",
+  "version": "16.0.0",
   "private": true,
   "description": "a python editor that lives in one html file",
   "scripts": {

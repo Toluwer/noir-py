@@ -5,11 +5,12 @@ const MONACO_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs';
 const PYODIDE_BASE = 'https://cdn.jsdelivr.net/pyodide/v0.29.5/full/';
 const MONO_FONT = "ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace";
 const PYODIDE_VERSION = '0.29.5';
-const APP_VERSION = '15.0';
+const APP_VERSION = '16.0';
 const WS_KEY = 'noir.py:workspace';
 const PREF_KEY = 'noir.py:prefs';
 const LEGACY_KEY = 'noir.py:code';
 const IS_MAC = /mac|ipad|iphone/i.test(navigator.userAgent);
+const KD = s => IS_MAC ? s.replace(/Ctrl/g, '⌘').replace(/Shift/g, '⇧').replace(/Alt/g, '⌥') : s;
 
 const $ = id => document.getElementById(id);
 const app = $('app'), fileListEl = $('file-list'), tabsEl = $('tabs'), tabbarEl = $('tabbar'),
@@ -184,6 +185,7 @@ function ctxShow(x, y, items){
     if (it.disabled) row.classList.add('disabled');
     row.innerHTML = ICONS[it.icon] || '';
     row.appendChild(h('span', 'ctx-label', it.label));
+    if (it.key) row.appendChild(h('span', 'ctx-key', KD(it.key)));
     if (it.on) { const chk = h('span', 'ctx-check'); chk.innerHTML = ICONS.check; row.appendChild(chk); }
     if (!it.disabled) row.addEventListener('click', () => { const fn = it.fn; ctxClose(); fn(); });
     row.addEventListener('mouseenter', () => { ctxSel = ctxRows.indexOf(row); ctxMark(); });
@@ -217,31 +219,31 @@ window.addEventListener('keydown', e => {
 const MENUS = {
   file: () => [
     { label: 'New File', icon: 'plus', fn: newFile },
-    { label: 'Open File…', icon: 'folderOpen', fn: () => filePick.click() },
+    { label: 'Open File…', icon: 'folderOpen', key: 'Ctrl+O', fn: () => filePick.click() },
     { sep: true },
-    { label: 'Save File', icon: 'save', fn: () => { saveWS(); toast('Saved'); } },
-    { label: 'Download File', icon: 'download', fn: () => downloadFile() },
+    { label: 'Save File', icon: 'save', key: 'Ctrl+S', fn: () => { saveWS(); toast('Saved'); } },
+    { label: 'Download File', icon: 'download', key: 'Ctrl+Shift+S', fn: () => downloadFile() },
     { label: 'Copy Share Link', icon: 'link', fn: () => copyShareLink() },
     { sep: true },
     { label: 'Close File', icon: 'x', disabled: !activeFile(), fn: () => { const f = activeFile(); if (f) deleteFile(f.id); } }
   ],
   edit: () => [
-    { label: 'Undo', icon: 'undo', fn: () => runEditorAction('undo') },
-    { label: 'Redo', icon: 'redo', fn: () => runEditorAction('redo') },
+    { label: 'Undo', icon: 'undo', key: 'Ctrl+Z', fn: () => runEditorAction('undo') },
+    { label: 'Redo', icon: 'redo', key: IS_MAC ? 'Ctrl+Shift+Z' : 'Ctrl+Y', fn: () => runEditorAction('redo') },
     { sep: true },
     { label: 'Find & Replace…', icon: 'search', fn: () => runEditorAction('editor.action.startFindReplaceAction') },
-    { label: 'Format Document', icon: 'wand', fn: formatDocument },
+    { label: 'Format Document', icon: 'wand', key: 'Shift+Alt+F', fn: formatDocument },
     { label: 'Toggle Line Comment', icon: 'hash', fn: () => runEditorAction('editor.action.commentLine') },
     { sep: true },
-    { label: 'Rename Symbol', icon: 'pencil', fn: renameSymbolAt },
+    { label: 'Rename Symbol', icon: 'pencil', key: 'F2', fn: renameSymbolAt },
     { label: 'Duplicate Selection', icon: 'copyPlus', fn: () => runEditorAction('editor.action.duplicateSelection') }
   ],
   view: () => [
-    { label: 'Show Sidebar', icon: 'panelLeft', on: () => S.prefs.sidebar, fn: () => toggleSidebar() },
-    { label: 'Show Console', icon: 'panelBottom', on: () => S.prefs.console, fn: () => toggleConsole() },
+    { label: 'Show Sidebar', icon: 'panelLeft', key: 'Ctrl+B', on: () => S.prefs.sidebar, fn: () => toggleSidebar() },
+    { label: 'Show Console', icon: 'panelBottom', key: 'Ctrl+J', on: () => S.prefs.console, fn: () => toggleConsole() },
     { sep: true },
     { label: 'Explorer', icon: 'fileCode', fn: () => setView('files', { force: true }) },
-    { label: 'Search', icon: 'search', fn: () => setView('search', { force: true }) },
+    { label: 'Search', icon: 'search', key: 'Ctrl+Shift+F', fn: () => setView('search', { force: true }) },
     { label: 'Variables', icon: 'activity', fn: () => setView('vars', { force: true }) },
     { label: 'Plots', icon: 'chart', fn: () => setView('plots', { force: true }) },
     { label: 'History', icon: 'history', fn: () => setView('hist', { force: true }) },
@@ -249,27 +251,27 @@ const MENUS = {
     { label: 'Show Minimap', icon: 'map', on: () => S.prefs.minimap, fn: () => toggleMinimap() },
     { label: 'Word Wrap', icon: 'wrap', on: () => S.prefs.wordWrap, fn: () => toggleWrap() },
     { sep: true },
-    { label: 'Zoom In', icon: 'zoomIn', fn: () => setFont(S.prefs.fontSize + 1) },
-    { label: 'Zoom Out', icon: 'zoomOut', fn: () => setFont(S.prefs.fontSize - 1) },
-    { label: 'Reset Font Size', icon: 'type', fn: () => resetFont() },
+    { label: 'Zoom In', icon: 'zoomIn', key: 'Ctrl+=', fn: () => setFont(S.prefs.fontSize + 1) },
+    { label: 'Zoom Out', icon: 'zoomOut', key: 'Ctrl+-', fn: () => setFont(S.prefs.fontSize - 1) },
+    { label: 'Reset Font Size', icon: 'type', key: 'Ctrl+0', fn: () => resetFont() },
     { sep: true },
     { label: 'Ink Theme', icon: 'moon', on: () => S.prefs.theme === 'ink', fn: toggleTheme }
   ],
   run: () => [
-    { label: 'Run File', icon: 'play', disabled: !activeFile(), fn: () => run() },
-    { label: 'Run Selection', icon: 'runSel', fn: () => runSelection() },
+    { label: 'Run File', icon: 'play', key: 'Ctrl+Enter', disabled: !activeFile(), fn: () => run() },
+    { label: 'Run Selection', icon: 'runSel', key: 'Ctrl+Shift+Enter', fn: () => runSelection() },
     { label: 'Profile File', icon: 'gauge', fn: () => profileFile() },
     { sep: true },
     { label: 'Restart Runtime', icon: 'rotate', fn: () => restartRuntime() },
-    { label: 'Clear Console', icon: 'eraser', fn: () => clearConsole() }
+    { label: 'Clear Console', icon: 'eraser', key: 'Ctrl+L', fn: () => clearConsole() }
   ],
   tools: () => [
-    { label: 'Command Palette…', icon: 'command', fn: () => openPalette('>') },
+    { label: 'Command Palette…', icon: 'command', key: 'Ctrl+K', fn: () => openPalette('>') },
     { label: 'Install Package…', icon: 'box', fn: () => openPalette('install ') },
     { label: 'Ghost Text Settings…', icon: 'wand', fn: () => openAIModal() },
     { sep: true },
     { label: 'Lint File', icon: 'circleX', fn: () => { const f = activeFile(); if (f) lintModel(f.model, true); } },
-    { label: 'Next Problem', icon: 'chevDown', fn: () => nextProblem(false) }
+    { label: 'Next Problem', icon: 'chevDown', key: 'F8', fn: () => nextProblem(false) }
   ],
   help: () => [
     { label: 'About noir.py', icon: 'info', fn: openAbout },
@@ -1818,7 +1820,17 @@ $('vv-refresh').addEventListener('click', refreshVars);
 
 let PLOTS = [], pwIx = 0, plotsSeen = false;
 
+function sweepMpl(){
+  const known = new Set(['app', 'palette', 'ai-modal', 'toasts', 'about-modal', 'file-pick', 'context-view']);
+  document.querySelectorAll('[class*="mpl-"]').forEach(n => {
+    let p = n;
+    while (p.parentElement && p.parentElement !== document.body) p = p.parentElement;
+    if (p.parentElement === document.body && !known.has(p.id)) p.remove();
+  });
+}
+
 function capturePlots(){
+  sweepMpl();
   if (!S.pyReady) return;
   const d = py('plots');
   const figs = (d && d.figs) || [];
@@ -1827,7 +1839,8 @@ function capturePlots(){
   if (S.view === 'plots') renderPlots();
   if (!plotsSeen){
     plotsSeen = true;
-    toast('Figure Captured — Open The Plots Panel');
+    setView('plots');
+    toast('Figure Captured');
   }
 }
 
@@ -3082,6 +3095,7 @@ require(['vs/editor/editor.main'], async function(){
 async function initPyodide(){
   try {
     pyodide = await loadPyodide({ indexURL: PYODIDE_BASE });
+    pyodide.runPython("import os, warnings; os.environ['MPLBACKEND'] = 'AGG'; warnings.filterwarnings('ignore', message='.*non-interactive.*')");
     pyodide.setStdout({ write: buf => { writeText(decoder.decode(buf, { stream: true }), 'out'); return buf.length; } });
     pyodide.setStderr({ write: buf => { writeText(decoder.decode(buf, { stream: true }), 'err'); return buf.length; } });
     await loadBlob();

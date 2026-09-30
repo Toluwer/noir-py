@@ -37,13 +37,13 @@
   --ui:ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif;
 }
 html[data-theme="ink"]{
-  --paper:#191713;
+  --paper:#15130f;
   --card:#201d18;
   --pop:#26231e;
   --well:#28241d;
   --ink:#ece7dc;
   --ink-soft:#b3aca0;
-  --muted:#877f70;
+  --muted:#938b7a;
   --faint:#5f594c;
   --line:#332f27;
   --line-soft:#2a2620;
@@ -51,7 +51,7 @@ html[data-theme="ink"]{
   --green:#8fc9a4; --green-soft:#24352b; --green-line:#3b5843;
   --red:#d29189;   --red-soft:#3a2a26;
   --amber:#c99e5a; --amber-soft:#383021;
-  --on-ink:#191713;
+  --on-ink:#15130f;
   --on-ink-hover:rgba(0,0,0,.24);
   --hover:rgba(236,231,220,.05);
   --active:rgba(236,231,220,.09);
@@ -91,12 +91,12 @@ svg{display:block;flex:none}
   height:44px;flex:none;
   background:var(--paper);
   border-bottom:1px solid var(--line);
-  display:flex;align-items:center;justify-content:space-between;
+  display:flex;align-items:center;justify-content:flex-start;
   padding:0 10px;
   user-select:none;
 }
 .tb-left{display:flex;align-items:center;gap:5px;min-width:0}
-.tb-right{display:flex;align-items:center;gap:10px;justify-content:flex-end;min-width:0}
+.tb-right{display:flex;align-items:center;gap:10px;justify-content:flex-end;min-width:0;margin-left:auto}
 .tb-div{width:1px;height:18px;background:var(--line);margin:0 6px;flex:none}
 .brand{display:flex;align-items:center;padding:0 5px}
 .brand-name{font-size:12.5px;font-weight:600;letter-spacing:-.01em;color:var(--ink);white-space:nowrap}
@@ -284,7 +284,7 @@ svg{display:block;flex:none}
   background:transparent;transition:background .12s;
 }
 #console-grip:hover::after,#console-grip.active::after{background:var(--line-strong)}
-#console{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--card)}
+#console{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--paper)}
 .con-head{
   height:36px;flex:none;
   background:var(--paper);
@@ -533,7 +533,7 @@ svg{display:block;flex:none}
 #diff-host{flex:1;min-height:0}
 
 .ctx{
-  position:fixed;z-index:200;min-width:216px;max-width:280px;
+  position:fixed;z-index:200;min-width:228px;max-width:280px;
   background:var(--pop);border:1px solid var(--line-strong);border-radius:12px;
   box-shadow:var(--shadow-pop);
   padding:5px;
@@ -548,6 +548,7 @@ svg{display:block;flex:none}
 }
 .ctx-i svg{width:13.5px;height:13.5px;color:var(--muted);flex:none}
 .ctx-i .ctx-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctx-key{flex:none;margin-left:12px;font-size:10.5px;color:var(--faint);letter-spacing:.03em;font-variant-numeric:tabular-nums}
 .ctx-check{display:flex;color:var(--green)}
 .ctx-check svg{width:12px;height:12px;color:var(--green)}
 .ctx-i.sel{background:var(--green-soft);color:var(--green)}
@@ -593,7 +594,7 @@ svg{display:block;flex:none}
 .pv-item img{display:block;width:100%;height:auto}
 .pv-cap{
   display:flex;align-items:center;justify-content:space-between;
-  padding:5px 9px;border-top:1px solid var(--line);
+  padding:6px 10px;border-top:1px solid var(--line);
   font-size:10.5px;color:var(--muted);user-select:none;
 }
 #plotwrap{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;background:var(--card)}
@@ -654,7 +655,7 @@ html[data-theme="ink"] .monaco-editor .def-flash{background:rgba(236,231,220,.08
 .ab-row b{font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
 .ab-foot{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:12px;font-size:11px;color:var(--muted);user-select:none}
 .ab-link{display:inline-flex;align-items:center;gap:5px;color:var(--ink);text-decoration:none;font-weight:500;padding:3px 8px;border-radius:6px}
-.ab-link:hover{background:var(--hover)}
+.ab-link:hover{background:var(--green-soft);color:var(--green)}
 .ab-link svg{width:11px;height:11px}
 
 #con-body::-webkit-scrollbar,#pal-list::-webkit-scrollbar,#file-list::-webkit-scrollbar,#vv-list::-webkit-scrollbar,#hv-list::-webkit-scrollbar,#sr-results::-webkit-scrollbar,#pv-list::-webkit-scrollbar{width:8px}
@@ -673,4 +674,9 @@ html[data-theme="ink"] .monaco-editor .def-flash{background:rgba(236,231,220,.08
   .icon-btn.sm{width:28px;height:28px}
   #btn-run{width:34px;height:32px}
   .menu-btn{padding:0 7px}
+}
+@media (max-width:520px){
+  #topbar{flex-wrap:wrap;height:auto;row-gap:2px;padding:6px 10px}
+  #menubar{order:9;flex:1 1 100%;margin-left:0;padding-left:0;border-left:0;justify-content:space-between;gap:0}
+  .menu-btn{flex:1;justify-content:center;padding:0 2px}
 }
