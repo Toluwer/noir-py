@@ -125,16 +125,18 @@ svg{display:block;flex:none}
 .menu-btn.open{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-strong)}
 
 #btn-run{
-  width:28px;height:28px;display:grid;place-items:center;flex:none;
-  border:1px solid var(--line-strong);border-radius:8px;
-  background:var(--card);color:var(--ink);cursor:pointer;
-  transition:color .12s,border-color .12s,background .12s,opacity .12s;
+  height:28px;padding:0 12px 0 10px;gap:7px;flex:none;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--ink);color:var(--on-ink);border:1px solid var(--ink);border-radius:8px;
+  font:500 12px var(--ui);letter-spacing:.01em;
+  transition:opacity .12s,transform .12s;
 }
-#btn-run:hover:not(:disabled){border-color:var(--ink);background:var(--well)}
+#btn-run:hover:not(:disabled){opacity:.88}
 #btn-run:active:not(:disabled){transform:translateY(.5px)}
-#btn-run:disabled{opacity:.4;cursor:not-allowed}
+#btn-run:disabled{opacity:.35;cursor:not-allowed}
 .run-ic{display:flex}
-.run-ic svg{width:14px;height:14px}
+.run-ic svg{width:13px;height:13px}
+.run-label{line-height:1;white-space:nowrap}
 
 .spin-wrap{display:inline-flex;align-items:center;gap:4px;color:var(--ink)}
 .spin-wrap i{width:5px;height:5px;border-radius:50%;background:currentColor;animation:dotPulse 1.4s ease-in-out infinite}
@@ -347,7 +349,7 @@ svg{display:block;flex:none}
 #st-left.run{color:var(--ink-soft)}
 #st-right{display:flex;align-items:center;flex:none}
 .st-sep{width:1px;height:12px;background:var(--line);margin:0 7px;flex:none}
-#st-prob[hidden] + .st-sep{display:none}
+#st-prob[hidden] + .st-sep,#st-py[hidden] + .st-sep{display:none}
 .st-btn{
   display:inline-flex;align-items:center;height:18px;
   padding:0 6px;border-radius:5px;
@@ -669,10 +671,12 @@ html[data-theme="ink"] .monaco-editor .def-flash{background:rgba(236,231,220,.08
   #sb-zone{position:absolute;left:0;top:0;bottom:0;z-index:40;box-shadow:var(--shadow-side)}
 }
 @media (max-width:640px){
-  #st-spaces,#st-eol,#st-font,#st-py,.st-static,#st-theme,#st-ai,.st-ai-sep,#st-right .st-sep:last-of-type{display:none}
+  #st-spaces,#st-eol,#st-font,#st-py,.st-static,#st-theme,#st-ai{display:none}
+  #st-right .st-sep{display:none}
   .icon-btn{width:32px;height:32px}
   .icon-btn.sm{width:28px;height:28px}
-  #btn-run{width:34px;height:32px}
+  #btn-run{width:34px;height:32px;padding:0;gap:0}
+  .run-label{display:none}
   .menu-btn{padding:0 7px}
 }
 @media (max-width:520px){

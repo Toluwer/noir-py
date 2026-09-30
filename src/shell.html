@@ -36,8 +36,9 @@
       <button id="btn-console" class="icon-btn" title="Toggle Console" data-ic="panelBottom"></button>
       <button id="btn-palette" class="icon-btn" title="Command Palette" data-ic="command"></button>
       <div class="tb-div"></div>
-      <button id="btn-run" disabled title="Run File">
+      <button id="btn-run" disabled title="Run File (Ctrl+Enter)">
         <span id="run-ic" class="run-ic" data-ic="playLine"></span>
+        <span class="run-label">Run</span>
       </button>
     </div>
   </header>
@@ -164,18 +165,20 @@
       <span id="st-text">Loading Runtime…</span>
     </div>
     <div id="st-right">
-      <button class="st-btn" id="st-theme" title="Theme — Paper / Ink">Paper</button><span class="st-sep"></span>
-      <button class="st-btn" id="st-ai" title="Ghost Text — Inline Suggestions">AI: Local</button><span class="st-sep st-ai-sep"></span>
       <button class="st-btn st-prob" id="st-prob" hidden title="Problems — F8 Next, Shift+F8 Previous"><span class="sp-ic err" data-ic="circleX"></span><span id="sp-n-err">0</span><span class="sp-ic warn" data-ic="triangle"></span><span id="sp-n-warn">0</span></button>
       <span class="st-sep"></span>
       <button class="st-btn" id="st-pos" title="Go To Line &amp; Column">Ln 1, Col 1</button>
       <span class="st-sep"></span>
       <button class="st-btn" id="st-spaces" title="Switch Indentation">Spaces: 4</button>
       <button class="st-btn" id="st-eol" title="Switch Line Endings">LF</button>
-      <span class="st-btn st-static" title="File Encoding">UTF-8</span>
+      <button class="st-btn st-static" title="File Encoding">UTF-8</button>
       <button class="st-btn" id="st-font" title="Reset Font Size">13.5 px</button>
       <span class="st-sep"></span>
       <button class="st-btn" id="st-py" hidden title="Python Version">Python</button>
+      <span class="st-sep"></span>
+      <button class="st-btn" id="st-ai" title="Ghost Text — Inline Suggestions">Ghost: Local</button>
+      <span class="st-sep"></span>
+      <button class="st-btn" id="st-theme" title="Theme — Paper / Ink">Paper</button>
     </div>
   </footer>
 
