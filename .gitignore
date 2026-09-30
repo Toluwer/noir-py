@@ -1,3 +1,2 @@
 node_modules/
-minified-check.js
-pack-check.json
+.check/

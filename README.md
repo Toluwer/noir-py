@@ -29,6 +29,15 @@ requires node.
     npm install
     node build.mjs
 
-the build inlines `src/` — html, css, js, and the python engine — into a single `python-editor.html`. `src/blob/` holds the python sources (introspection, repl, tooling); they are deflated and embedded into the html at build time.
+the build inlines everything into a single `python-editor.html`:
+
+- `src/shell.html` — page skeleton and boot loader
+- `src/style.css` — both themes, paper and ink
+- `src/js/` — the app, as 26 focused modules; `build.mjs` concatenates them in `MODULES` order inside one iife, so the layout is pure organization and cannot change behavior
+- `src/engine/` — the python side: introspection, repl, tooling, and completion data, deflated and embedded at build time
+
+`src/js/` maps to concerns: `state` (dom handles, icon set, app state), `menu`/`tabs` (menu bar, context menus), `files`/`store`/`share` (file lifecycle, persistence, share links), `console`/`errors`/`run` (execution), `palette`/`keys` (commands and shortcuts), `views`/`plots`/`search`/`history`/`lint` (sidebar tools), `bridge`/`ghost`/`monaco`/`boot`/`api` (python bridge, ghost text, editor wiring, startup, the `window.noir` surface).
+
+the build fails if a comment ever appears in a source file, if `src/js/` and the manifest drift apart, or if any embedded payload fails to round-trip.
 
 commit the regenerated `python-editor.html` alongside source changes, then push. loader users pick up the update on next open.

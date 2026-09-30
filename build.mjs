@@ -6,11 +6,24 @@ import {fileURLToPath} from 'url';
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const read = f => fs.readFileSync(path.join(dir, f), 'utf8');
 
-const page = read('src/page.html');
+const MODULES = [
+  'state', 'util', 'menu', 'edit', 'tabs', 'store', 'chrome', 'files', 'share', 'settings',
+  'console', 'errors', 'run', 'palette', 'keys', 'views', 'plots', 'format', 'search', 'history',
+  'lint', 'bridge', 'ghost', 'monaco', 'boot', 'api'
+];
+const onDisk = fs.readdirSync(path.join(dir, 'src/js')).map(f => f.replace(/\.js$/, '')).sort();
+const listed = [...MODULES].sort();
+if (onDisk.join() !== listed.join()) {
+  console.error('FATAL: src/js does not match MODULES manifest', { onDisk, listed });
+  process.exit(1);
+}
+
+const page = read('src/shell.html');
 const css = read('src/style.css');
-let js = read('src/app0.js');
+let js = "(function(){\n" + MODULES.map(m => read(`src/js/${m}.js`)).join('') + "})();\n";
 const kb = s => Buffer.byteLength(s) / 1024;
 
+const MARKERS = { bridge: ["'/*__NOIR_BLOB__*/'"] };
 const noComments = (name, src, markers = []) => {
   for (const m of markers) src = src.split(m).join('');
   if (src.includes('/*')) { console.error(`FATAL: /* comment found in ${name}`); process.exit(1); }
@@ -18,23 +31,23 @@ const noComments = (name, src, markers = []) => {
   if (/<!--/.test(src)) { console.error(`FATAL: html comment found in ${name}`); process.exit(1); }
 };
 noComments('src/style.css', css);
-noComments('src/app0.js', js, ["'/*__NOIR_BLOB__*/'"]);
-noComments('src/page.html', page, ["'/*__NOIR_PACK__*/'"]);
+for (const m of MODULES) noComments(`src/js/${m}.js`, read(`src/js/${m}.js`), MARKERS[m]);
+noComments('src/shell.html', page, ["'/*__NOIR_PACK__*/'"]);
 
-const blob = {
-  intel: read('src/blob/intel.py'),
-  repl: read('src/blob/repl.py'),
-  tools: read('src/blob/tools.py'),
-  ...JSON.parse(read('src/blob/data.json'))
+const engine = {
+  intel: read('src/engine/intel.py'),
+  repl: read('src/engine/repl.py'),
+  tools: read('src/engine/tools.py'),
+  ...JSON.parse(read('src/engine/data.json'))
 };
-const blobJson = JSON.stringify(blob);
-const blobB64 = zlib.deflateRawSync(Buffer.from(blobJson, 'utf8')).toString('base64url');
+const engineJson = JSON.stringify(engine);
+const engineB64 = zlib.deflateRawSync(Buffer.from(engineJson, 'utf8')).toString('base64url');
 
-if (zlib.inflateRawSync(Buffer.from(blobB64, 'base64url')).toString('utf8') !== blobJson) {
+if (zlib.inflateRawSync(Buffer.from(engineB64, 'base64url')).toString('utf8') !== engineJson) {
   console.error('FATAL: engine blob round-trip mismatch'); process.exit(1);
 }
-if (!js.includes("'/*__NOIR_BLOB__*/'")) { console.error('FATAL: PYBLOB placeholder missing in app0.js'); process.exit(1); }
-js = js.replace("'/*__NOIR_BLOB__*/'", () => "'" + blobB64 + "'");
+if (!js.includes("'/*__NOIR_BLOB__*/'")) { console.error('FATAL: PYBLOB placeholder missing in src/js'); process.exit(1); }
+js = js.replace("'/*__NOIR_BLOB__*/'", () => "'" + engineB64 + "'");
 
 let mode = 'esbuild', jsOut, cssOut;
 try {
@@ -53,7 +66,7 @@ const packB64 = zlib.deflateRawSync(Buffer.from(packJson, 'utf8')).toString('bas
 if (zlib.inflateRawSync(Buffer.from(packB64, 'base64url')).toString('utf8') !== packJson) {
   console.error('FATAL: pack round-trip mismatch'); process.exit(1);
 }
-if (!page.includes("'/*__NOIR_PACK__*/'")) { console.error('FATAL: NOIR_PACK placeholder missing in page.html'); process.exit(1); }
+if (!page.includes("'/*__NOIR_PACK__*/'")) { console.error('FATAL: NOIR_PACK placeholder missing in shell.html'); process.exit(1); }
 
 let html = page.replace(/\r/g, '')
   .split('\n').map(l => l.trim()).filter(Boolean).join('')
@@ -68,14 +81,15 @@ if (!html.includes(packB64.slice(0, 64))) { console.error('FATAL: pack payload m
 const dest = path.join(dir, 'python-editor.html');
 fs.writeFileSync(dest, html);
 
-const srcTotal = kb(css) + kb(read('src/app0.js')) + kb(page) + kb(blobJson);
+const srcTotal = kb(css) + MODULES.reduce((a, m) => a + kb(read(`src/js/${m}.js`)), 0) + kb(page) + kb(engineJson);
 console.log('mode           :', mode);
-console.log('engine blob kb :', (packB64 ? blobB64.length : 0, blobB64.length / 1024).toFixed ? (blobB64.length / 1024).toFixed(1) : '', '(raw', (blobJson.length / 1024).toFixed(1) + ')');
+console.log('modules        :', MODULES.length, '(' + MODULES.join(' ') + ')');
+console.log('engine blob kb :', (engineB64.length / 1024).toFixed(1), '(raw', (engineJson.length / 1024).toFixed(1) + ')');
 console.log('app pack   kb  :', (packB64.length / 1024).toFixed(1), '(css', kb(cssOut).toFixed(1), '+ js', kb(jsOut).toFixed(1), '= raw', kb(packJson).toFixed(1) + ')');
 console.log('source     kb  :', srcTotal.toFixed(1));
 console.log('output     kb  :', kb(html).toFixed(1));
-console.log('vs plain build :', (kb(packJson) + kb(page)).toFixed(1), 'kb ->', kb(html).toFixed(1), 'kb');
 console.log('reduction      :', ((1 - kb(html) / (kb(packJson) + kb(page))) * 100).toFixed(1) + '% (app payload)');
 
-fs.writeFileSync(path.join(dir, 'minified-check.js'), jsOut);
-fs.writeFileSync(path.join(dir, 'pack-check.json'), packJson);
+fs.mkdirSync(path.join(dir, '.check'), { recursive: true });
+fs.writeFileSync(path.join(dir, '.check/minified.js'), jsOut);
+fs.writeFileSync(path.join(dir, '.check/pack.json'), packJson);
