@@ -33,10 +33,10 @@ the build inlines everything into a single `python-editor.html`:
 
 - `src/shell.html` — page skeleton and boot loader
 - `src/style.css` — both themes, paper and ink
-- `src/js/` — the app, as 26 focused modules; `build.mjs` concatenates them in `MODULES` order inside one iife, so the layout is pure organization and cannot change behavior
+- `src/js/` — the app, as 27 focused modules; `build.mjs` concatenates them in `MODULES` order inside one iife, so the layout is pure organization and cannot change behavior
 - `src/engine/` — the python side: introspection, repl, tooling, and completion data, deflated and embedded at build time
 
-`src/js/` maps to concerns: `state` (dom handles, icon set, app state), `menu`/`tabs` (menu bar, context menus), `files`/`store`/`share` (file lifecycle, persistence, share links), `console`/`errors`/`run` (execution), `palette`/`keys` (commands and shortcuts), `views`/`plots`/`search`/`history`/`lint` (sidebar tools), `bridge`/`ghost`/`monaco`/`boot`/`api` (python bridge, ghost text, editor wiring, startup, the `window.noir` surface).
+`src/js/` maps to concerns: `state` (dom handles, icon set, app state), `menu`/`tabs` (menu bar, context menus), `files`/`store`/`share` (file lifecycle, persistence, share links), `console`/`errors`/`run` (execution), `palette`/`keys` (commands and shortcuts), `views`/`crumbs`/`plots`/`search`/`history`/`lint` (sidebar tools, breadcrumbs, problems panel), `bridge`/`ghost`/`monaco`/`boot`/`api` (python bridge, ghost text, editor wiring, startup, the `window.noir` surface).
 
 the build fails if a comment ever appears in a source file, if `src/js/` and the manifest drift apart, or if any embedded payload fails to round-trip.
 

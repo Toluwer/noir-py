@@ -34,10 +34,14 @@ window.addEventListener('keydown', e => {
   const mod = e.metaKey || e.ctrlKey;
   if (!mod){
     if (e.altKey && !e.shiftKey && e.key.toLowerCase() === 'z'){ e.preventDefault(); toggleWrap(); return; }
-    if (S.inputField && e.key.length === 1 && !e.altKey && !(editor && editor.hasTextFocus())){
-      e.preventDefault();
-      S.inputField.focus();
-      S.inputField.value += e.key;
+    if (S.inputField && e.key.length === 1 && !e.altKey){
+      const ae = document.activeElement;
+      const free = !ae || ae === document.body || (editor && ae === editor.getDomNode()) || (editor && editor.hasTextFocus());
+      if (free){
+        e.preventDefault();
+        S.inputField.focus();
+        S.inputField.value += e.key;
+      }
     }
     return;
   }

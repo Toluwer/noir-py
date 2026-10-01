@@ -8,7 +8,7 @@ const read = f => fs.readFileSync(path.join(dir, f), 'utf8');
 
 const MODULES = [
   'state', 'util', 'menu', 'edit', 'tabs', 'store', 'chrome', 'files', 'share', 'settings',
-  'console', 'errors', 'run', 'palette', 'keys', 'views', 'plots', 'format', 'search', 'history',
+  'console', 'errors', 'run', 'palette', 'keys', 'views', 'crumbs', 'plots', 'format', 'search', 'history',
   'lint', 'bridge', 'ghost', 'monaco', 'boot', 'api'
 ];
 const onDisk = fs.readdirSync(path.join(dir, 'src/js')).map(f => f.replace(/\.js$/, '')).sort();

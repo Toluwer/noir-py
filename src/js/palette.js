@@ -22,12 +22,15 @@ const COMMANDS = [
   { label: 'Restart Runtime', icon: 'rotate', fn: () => restartRuntime() },
   { label: 'View: Explorer', icon: 'fileCode', fn: () => setView('files', { force: true }) },
   { label: 'View: Search', icon: 'search', fn: () => setView('search', { force: true }) },
-  { label: 'View: Variables', icon: 'activity', fn: () => setView('vars', { force: true }) },
   { label: 'View: Plots', icon: 'chart', fn: () => setView('plots', { force: true }) },
   { label: 'View: History', icon: 'history', fn: () => setView('hist', { force: true }) },
+  { label: 'Panel: Console', icon: 'terminal', fn: () => { toggleConsole(true); setPanelTab('console'); } },
+  { label: 'Panel: Problems', icon: 'circleX', fn: () => { toggleConsole(true); setPanelTab('problems'); } },
+  { label: 'Panel: Variables', icon: 'activity', fn: () => { toggleConsole(true); setPanelTab('vars'); } },
   { label: 'Toggle Sidebar', icon: 'panelLeft', fn: () => toggleSidebar() },
-  { label: 'Toggle Console', icon: 'panelBottom', fn: () => toggleConsole() },
+  { label: 'Toggle Panel', icon: 'panelBottom', fn: () => toggleConsole() },
   { label: 'Focus Console', icon: 'terminal', fn: () => focusConsoleInput() },
+  { label: 'Go To Line/Column…', icon: 'goto', fn: () => { if (editor){ editor.focus(); const a = editor.getAction('editor.action.gotoLine'); if (a) a.run(); } } },
   { label: 'Zoom In', icon: 'zoomIn', fn: () => setFont(S.prefs.fontSize + 1) },
   { label: 'Zoom Out', icon: 'zoomOut', fn: () => setFont(S.prefs.fontSize - 1) },
   { label: 'Reset Font Size', icon: 'type', fn: () => resetFont() },
@@ -174,7 +177,7 @@ function insertSnippetAtCursor(sn){
   }
 }
 
-$('btn-palette').addEventListener('click', () => openPalette(''));
+cmdCenter.addEventListener('click', () => openPalette(''));
 palField.addEventListener('input', renderPal);
 palField.addEventListener('keydown', e => {
   e.stopPropagation();

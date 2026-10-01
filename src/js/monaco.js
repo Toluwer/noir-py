@@ -230,15 +230,18 @@ require(['vs/editor/editor.main'], async function(){
 
   editor.onDidChangeCursorPosition(e => {
     stPos.textContent = 'Ln ' + e.position.lineNumber + ', Col ' + e.position.column;
+    scheduleCrumbs();
   });
   editor.onDidChangeModel(() => {
     refreshStatusBtns();
     const p = editor.getPosition();
     stPos.textContent = p ? 'Ln ' + p.lineNumber + ', Col ' + p.column : 'Ln 1, Col 1';
+    renderCrumbs();
   });
   editor.onDidChangeModelContent(e => {
     scheduleWS();
     if (editor.getModel()) scheduleLintFor(editor.getModel());
+    scheduleCrumbs();
     const changes = e.changes;
     if (!changes.length) return;
     const inserted = changes[changes.length - 1].text || '';
@@ -630,7 +633,7 @@ require(['vs/editor/editor.main'], async function(){
       if (!w || !/^[A-Za-z_]\w*$/.test(w.word)) return null;
       const name = w.word;
       const defRe = '^[ \\t]*(?:async[ \\t]+def|def|class)[ \\t]+' + escapeRe(name) + '\\b';
-      const asgRe = '^' + escapeRe(name) + '[ \\t]*=(?!=)';
+      const asgRe = '^[ \\t]*' + escapeRe(name) + '[ \\t]*=(?!=)';
       const files = [...S.files].sort((a, b) => (b.id === S.activeId) - (a.id === S.activeId));
       for (const pass of [defRe, asgRe]){
         for (const f of files){

@@ -5,7 +5,10 @@ function applyTheme(t, save){
   document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
   const m = document.querySelector('meta[name="theme-color"]');
   if (m) m.setAttribute('content', dark ? '#15130f' : '#f5f4ef');
-  if (stTheme) stTheme.textContent = dark ? 'Ink' : 'Paper';
+  if (railTheme){
+    railTheme.innerHTML = dark ? ICONS.sun : ICONS.moon;
+    railTheme.title = 'Theme — ' + (dark ? 'Ink' : 'Paper');
+  }
   try { if (window.monaco && monaco.editor && monaco.editor.setTheme) monaco.editor.setTheme(dark ? 'ink' : 'paper'); } catch (e) {}
   if (save !== false) savePrefs();
 }
@@ -20,7 +23,9 @@ function refreshChrome(){
   const has = S.files.length > 0;
   emptyState.hidden = has;
   tabbarEl.hidden = !has;
+  crumbsBar.hidden = !has;
   updateRunUI();
+  renderCrumbs();
 }
 
 function renderSidebar(){

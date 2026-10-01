@@ -30,6 +30,7 @@ function copyOutput(){
 
 function applyFont(){
   if (editor) editor.updateOptions({ fontSize: S.prefs.fontSize });
+  if (typeof diffEd !== 'undefined' && diffEd) diffEd.updateOptions({ fontSize: S.prefs.fontSize });
   stFont.textContent = S.prefs.fontSize + ' px';
 }
 

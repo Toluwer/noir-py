@@ -3,8 +3,8 @@ const ghostLineCache = new Map();
 
 function aiModeLabel(){ return { off: 'Off', local: 'Local', ollama: 'Ollama' }[S.prefs.ai.mode] || 'Local'; }
 function refreshAIChip(){
-  stAi.textContent = 'Ghost: ' + aiModeLabel();
-  stAi.title = 'Ghost Text — ' + aiModeLabel() + '. Click To Configure.';
+  railGhost.classList.toggle('on', S.prefs.ai.mode !== 'off');
+  railGhost.title = 'Ghost Text — ' + aiModeLabel() + '. Click To Configure.';
 }
 function openAIModal(){
   aiModal.hidden = false;
@@ -17,8 +17,8 @@ function openAIModal(){
 }
 function closeAIModal(){ aiModal.hidden = true; if (editor) editor.focus(); }
 
-stAi.addEventListener('click', openAIModal);
-stTheme.addEventListener('click', toggleTheme);
+railGhost.addEventListener('click', openAIModal);
+railTheme.addEventListener('click', toggleTheme);
 $('ai-x').addEventListener('click', closeAIModal);
 aiModal.addEventListener('mousedown', e => { if (e.target === aiModal) closeAIModal(); });
 for (const b of aiModal.querySelectorAll('.aim-mode')){

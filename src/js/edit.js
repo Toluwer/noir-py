@@ -92,17 +92,18 @@ function renameSymbolAt(){
     if (!ok || !nv || nv === name || !/^[A-Za-z_]\w*$/.test(nv)) return;
     const wordRe = '\\b' + escapeRe(name) + '\\b';
     let n = 0;
+    const touched = [];
     for (const f of S.files){
       let ms = [];
       try { ms = f.model.findMatches(wordRe, false, true, true, null, false, 2000); } catch (e) {}
       if (ms.length){
         pushEdits(f.model, ms.map(m => ({ range: m.range, text: nv })));
         n += ms.length;
+        touched.push(f.model);
       }
     }
     saveWS();
-    const cur = activeFile();
-    if (cur) scheduleLintFor(cur.model);
+    for (const m of touched) lintModel(m);
     toast('Renamed ' + name + ' → ' + nv + ' · ' + n + ' Edit' + (n === 1 ? '' : 's'));
   };
   box.addEventListener('keydown', e => {

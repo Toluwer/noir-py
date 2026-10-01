@@ -1,4 +1,4 @@
-const VIEWS = { files: 'Explorer', search: 'Search', vars: 'Variables', plots: 'Plots', hist: 'History' };
+const VIEWS = { files: 'Explorer', search: 'Search', plots: 'Plots', hist: 'History' };
 
 function setView(v, opts){
   const o = opts || {};
@@ -14,26 +14,21 @@ function renderView(){
   sbTitle.textContent = VIEWS[v] || 'Explorer';
   fileListEl.hidden = v !== 'files';
   $('btn-newfile').hidden = v !== 'files';
-  $('vv-count').hidden = v !== 'vars';
-  $('vv-refresh').hidden = v !== 'vars';
   $('pv-clear').hidden = v !== 'plots';
   hvName.hidden = v !== 'hist';
   viewSearch.hidden = v !== 'search';
-  viewVars.hidden = v !== 'vars';
   viewPlots.hidden = v !== 'plots';
   viewHist.hidden = v !== 'hist';
   for (const key of Object.keys(VIEWS)){
     const b = $('rail-' + key);
     if (b) b.classList.toggle('active', key === v);
   }
-  if (v === 'vars') refreshVars();
-  else if (v === 'plots') renderPlots();
+  if (v === 'plots') renderPlots();
   else if (v === 'hist') renderHist();
 }
 
 $('rail-files').addEventListener('click', () => setView('files'));
 $('rail-search').addEventListener('click', () => setView('search', { focus: true }));
-$('rail-vars').addEventListener('click', () => setView('vars'));
 $('rail-plots').addEventListener('click', () => setView('plots'));
 $('rail-hist').addEventListener('click', () => setView('hist'));
 

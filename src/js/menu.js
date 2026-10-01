@@ -86,13 +86,16 @@ const MENUS = {
   ],
   view: () => [
     { label: 'Show Sidebar', icon: 'panelLeft', key: 'Ctrl+B', on: () => S.prefs.sidebar, fn: () => toggleSidebar() },
-    { label: 'Show Console', icon: 'panelBottom', key: 'Ctrl+J', on: () => S.prefs.console, fn: () => toggleConsole() },
+    { label: 'Show Panel', icon: 'panelBottom', key: 'Ctrl+J', on: () => S.prefs.console, fn: () => toggleConsole() },
     { sep: true },
     { label: 'Explorer', icon: 'fileCode', fn: () => setView('files', { force: true }) },
     { label: 'Search', icon: 'search', key: 'Ctrl+Shift+F', fn: () => setView('search', { force: true }) },
-    { label: 'Variables', icon: 'activity', fn: () => setView('vars', { force: true }) },
     { label: 'Plots', icon: 'chart', fn: () => setView('plots', { force: true }) },
     { label: 'History', icon: 'history', fn: () => setView('hist', { force: true }) },
+    { sep: true },
+    { label: 'Panel: Console', icon: 'terminal', on: () => S.prefs.console && S.panelTab === 'console', fn: () => { toggleConsole(true); setPanelTab('console'); } },
+    { label: 'Panel: Problems', icon: 'circleX', on: () => S.prefs.console && S.panelTab === 'problems', fn: () => { toggleConsole(true); setPanelTab('problems'); } },
+    { label: 'Panel: Variables', icon: 'activity', on: () => S.prefs.console && S.panelTab === 'vars', fn: () => { toggleConsole(true); setPanelTab('vars'); } },
     { sep: true },
     { label: 'Show Minimap', icon: 'map', on: () => S.prefs.minimap, fn: () => toggleMinimap() },
     { label: 'Word Wrap', icon: 'wrap', on: () => S.prefs.wordWrap, fn: () => toggleWrap() },
@@ -102,6 +105,18 @@ const MENUS = {
     { label: 'Reset Font Size', icon: 'type', key: 'Ctrl+0', fn: () => resetFont() },
     { sep: true },
     { label: 'Ink Theme', icon: 'moon', on: () => S.prefs.theme === 'ink', fn: toggleTheme }
+  ],
+  go: () => [
+    { label: 'Go To File…', icon: 'fileCode', key: 'Ctrl+P', fn: () => openPalette('') },
+    { label: 'Go To Symbol In File…', icon: 'listTree', key: 'Ctrl+Shift+O', fn: () => openPalette('@') },
+    { label: 'Go To Line/Column…', icon: 'goto', key: 'Ctrl+G', fn: () => { if (editor){ editor.focus(); const a = editor.getAction('editor.action.gotoLine'); if (a) a.run(); } } },
+    { sep: true },
+    { label: 'Next Problem', icon: 'chevDown', key: 'F8', fn: () => nextProblem(false) },
+    { label: 'Previous Problem', icon: 'chevDown', key: 'Shift+F8', fn: () => nextProblem(true) },
+    { sep: true },
+    { label: 'Go To Definition', icon: 'goto', key: 'F12', disabled: !activeFile(), fn: gotoDefAction },
+    { label: 'Find All References', icon: 'search', key: 'Shift+F12', disabled: !activeFile(), fn: findRefsAction },
+    { label: 'Rename Symbol', icon: 'pencil', key: 'F2', disabled: !activeFile(), fn: renameSymbolAt }
   ],
   run: () => [
     { label: 'Run File', icon: 'play', key: 'Ctrl+Enter', disabled: !activeFile(), fn: () => run() },
@@ -125,6 +140,22 @@ const MENUS = {
     { label: 'Pyodide Docs', icon: 'externalLink', fn: () => window.open('https://pyodide.org/en/stable/usage/index.html', '_blank') }
   ]
 };
+
+function editorActionsMenu(x, y){
+  ctxShow(x, y, [
+    { label: 'Run Selection', icon: 'runSel', key: 'Ctrl+Shift+Enter', disabled: !activeFile(), fn: runSelection },
+    { label: 'Format Document', icon: 'wand', key: 'Shift+Alt+F', disabled: !activeFile(), fn: formatDocument },
+    { sep: true },
+    { label: 'Rename Symbol', icon: 'pencil', key: 'F2', disabled: !activeFile(), fn: renameSymbolAt },
+    { label: 'Go To Definition', icon: 'goto', key: 'F12', disabled: !activeFile(), fn: gotoDefAction },
+    { sep: true },
+    { label: 'Show Minimap', icon: 'map', on: () => S.prefs.minimap, fn: () => toggleMinimap() },
+    { label: 'Word Wrap', icon: 'wrap', on: () => S.prefs.wordWrap, fn: () => toggleWrap() },
+    { sep: true },
+    { label: 'Download File', icon: 'download', key: 'Ctrl+Shift+S', disabled: !activeFile(), fn: () => downloadFile() },
+    { label: 'Copy Share Link', icon: 'link', disabled: !activeFile(), fn: () => copyShareLink() }
+  ]);
+}
 
 function menuBarShow(btn, name){
   const build = MENUS[name];

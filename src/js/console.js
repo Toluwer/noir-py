@@ -1,5 +1,25 @@
 const decoder = new TextDecoder();
 
+function setPanelTab(t, opts){
+  const o = opts || {};
+  if (!t) t = 'console';
+  S.panelTab = t;
+  S.prefs.panelTab = t;
+  conBody.hidden = t !== 'console';
+  viewProblems.hidden = t !== 'problems';
+  viewVars.hidden = t !== 'vars';
+  for (const b of document.querySelectorAll('.ptab')) b.classList.toggle('active', b.dataset.ptab === t);
+  $('btn-restart').hidden = $('btn-clear').hidden = t !== 'console';
+  vvCount.hidden = $('vv-refresh').hidden = t !== 'vars';
+  if (t === 'vars') refreshVars();
+  else if (t === 'problems') renderProblems();
+  if (!o.silent) savePrefs();
+}
+
+for (const b of document.querySelectorAll('.ptab')){
+  b.addEventListener('click', () => setPanelTab(b.dataset.ptab));
+}
+
 function nearBottom(){ return conBody.scrollHeight - conBody.scrollTop - conBody.clientHeight < 60; }
 function hideEmpty(){ conEmpty.hidden = true; }
 
@@ -174,6 +194,7 @@ async function replSubmit(){
 }
 
 function focusConsoleInput(){
+  setPanelTab('console', { silent: true });
   openConsole();
   if (S.inputField) S.inputField.focus();
   else if (S.pyReady && !S.running) replField.focus();

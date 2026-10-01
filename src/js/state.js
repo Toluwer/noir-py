@@ -4,7 +4,7 @@ const MONACO_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs';
 const PYODIDE_BASE = 'https://cdn.jsdelivr.net/pyodide/v0.29.5/full/';
 const MONO_FONT = "ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace";
 const PYODIDE_VERSION = '0.29.5';
-const APP_VERSION = '17.0';
+const APP_VERSION = '18.0';
 const WS_KEY = 'noir.py:workspace';
 const PREF_KEY = 'noir.py:prefs';
 const LEGACY_KEY = 'noir.py:code';
@@ -17,18 +17,21 @@ const app = $('app'), fileListEl = $('file-list'), tabsEl = $('tabs'), tabbarEl 
       stLeft = $('st-left'), stText = $('st-text'), stSpin = $('st-spin'), stPos = $('st-pos'),
       stSpaces = $('st-spaces'), stEol = $('st-eol'), stPy = $('st-py'),
       linesEl = $('lines'), conEmpty = $('con-empty'), conBody = $('con-body'),
-      conZone = $('console-zone'), grip = $('console-grip'), editorPane = $('editor-pane'),
+      conZone = $('panel-zone'), grip = $('console-grip'), editorPane = $('editor-pane'),
       pal = $('palette'), palField = $('pal-field'), palList = $('pal-list'),
       toastsEl = $('toasts'),
       btnOpen = null, btnDownload = null, filePick = $('file-pick'),
       replRow = $('repl-row'), replField = $('repl-field'), stFont = $('st-font'),
-      sbTitle = $('sb-title'), viewSearch = $('view-search'), viewVars = $('view-vars'), viewHist = $('view-hist'), viewPlots = $('view-plots'),
+      sbTitle = $('sb-title'), viewSearch = $('view-search'), viewHist = $('view-hist'), viewPlots = $('view-plots'),
       srQ = $('sr-q'), srR = $('sr-r'), srCase = $('sr-case'), srRex = $('sr-rex'), srAllBtn = $('sr-all'), srResults = $('sr-results'),
       vvList = $('vv-list'), vvCount = $('vv-count'), hvList = $('hv-list'), hvName = $('hv-name'), pvList = $('pv-list'),
       plotWrap = $('plotwrap'), pwImg = $('pw-img'), pwLabel = $('pw-label'), pwBody = $('pw-body'), pwPrev = $('pw-prev'), pwNext = $('pw-next'), pwSize = $('pw-size'),
       stProb = $('st-prob'), spErr = $('sp-n-err'), spWarn = $('sp-n-warn'),
       diffWrap = $('diffwrap'), diffHost = $('diff-host'), dwLabel = $('dw-label'),
-      stAi = $('st-ai'), stTheme = $('st-theme'), aiModal = $('ai-modal'), aiUrl = $('ai-url'), aiModel = $('ai-model'), aiStatus = $('ai-status'),
+      railGhost = $('rail-ghost'), railTheme = $('rail-theme'), cmdCenter = $('cmd-center'),
+      crumbsBar = $('crumbsbar'), crumbsEl = $('crumbs'), pbList = $('pb-list'), viewProblems = $('view-problems'),
+      viewVars = $('view-vars'), pnBadge = $('pn-badge'), btnRunsel = $('btn-runsel'), btnEdmenu = $('btn-edmenu'),
+      aiModal = $('ai-modal'), aiUrl = $('ai-url'), aiModel = $('ai-model'), aiStatus = $('ai-status'),
       aboutModal = $('about-modal'), abVer = $('ab-ver'), abRun = $('ab-run'),
       aiTestBtn = $('ai-test');
 
@@ -84,6 +87,8 @@ const ICONS = {
   insert: SV('<path d="m9 10-5 5 5 5"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>'),
   circleX: SV('<circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/>'),
   triangle: SV('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 20h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>'),
+  sun: SV('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>'),
+  ellipses: SV('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>'),
   pencil: SV('<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>')
 };
 
@@ -109,7 +114,8 @@ const S = {
   pyReady: false,
   monacoReady: false,
   view: 'files',
-  prefs: { sidebar: true, console: true, conH: 240, fontSize: 13.5, minimap: false, wordWrap: false, hist: [], theme: 'paper',
+  panelTab: 'console',
+  prefs: { sidebar: true, console: true, panelTab: 'console', conH: 240, fontSize: 13.5, minimap: false, wordWrap: false, hist: [], theme: 'paper',
            ai: { mode: 'local', url: 'http://localhost:11434', model: 'qwen2.5-coder:1.5b' } },
   openLine: null,
   lastHeadTime: null,

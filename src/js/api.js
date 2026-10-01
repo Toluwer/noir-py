@@ -13,7 +13,15 @@ window.noir = {
   copyOutput: copyOutput,
   importHash: importHash,
   repl: v => { replField.value = v; return replSubmit(); },
-  view: v => setView(v, { force: true }),
+  view: v => {
+    if (v === 'vars'){ toggleConsole(true); setPanelTab('vars'); return 'vars'; }
+    return setView(v, { force: true });
+  },
+  panel: (t) => { if (t){ toggleConsole(true); setPanelTab(t); } return S.panelTab; },
+  problems: () => Array.from(pbList.querySelectorAll('.pb-msg')).map(e => e.textContent),
+  badge: () => ({ hidden: pnBadge.hidden, text: pnBadge.textContent }),
+  crumbs: () => Array.from(crumbsEl.querySelectorAll('.crumb')).map(e => e.textContent),
+  crumbsHidden: () => crumbsBar.hidden,
   aiMode: (m) => { if (m){ S.prefs.ai.mode = m; savePrefs(); refreshAIChip(); } return S.prefs.ai; },
   aiModal: () => { openAIModal(); return !aiModal.hidden; },
   ghostItems: () => {
@@ -40,6 +48,7 @@ window.noir = {
   replaceAll: () => replaceIn(null),
   setReplace: v => { srR.value = v; },
   varsList: () => Array.from(vvList.querySelectorAll('.vv-row .vv-n')).map(e => e.textContent),
+  varsPanel: () => { toggleConsole(true); setPanelTab('vars'); return Array.from(vvList.querySelectorAll('.vv-row .vv-n')).map(e => e.textContent); },
   ctxShow: ctxShow,
   plotCount: () => PLOTS.length,
   plots: () => PLOTS.map(p => ({ n: p.n, kb: Math.round(p.png.length * 3 / 4 / 1024) })),

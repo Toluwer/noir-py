@@ -10,7 +10,9 @@ const activeFile = () => fileById(S.activeId);
 function st(text, spin){ stText.textContent = text; stSpin.hidden = !spin; }
 
 function updateRunUI(){
-  btnRun.disabled = S.running || !S.pyReady || !S.monacoReady || !activeFile();
+  const off = S.running || !S.pyReady || !S.monacoReady || !activeFile();
+  btnRun.disabled = off;
+  btnRunsel.disabled = off;
   runIc.innerHTML = S.running ? ICONS.spinner : ICONS.playLine;
   replRow.hidden = !S.pyReady || S.running;
   if (!replRow.hidden) hideEmpty();

@@ -36,16 +36,61 @@ function lintModel(model, manual){
 
 function updateProbChip(){
   let e = 0, w = 0;
-  for (const f of S.files){
-    if (!f.model || f.model.isDisposed()) continue;
-    for (const m of monaco.editor.getModelMarkers({ owner: LINT_OWNER, resource: f.model.uri })){
-      if (m.severity === monaco.MarkerSeverity.Error) e++;
-      else if (m.severity === monaco.MarkerSeverity.Warning) w++;
+  if (window.monaco){
+    for (const f of S.files){
+      if (!f.model || f.model.isDisposed()) continue;
+      for (const m of monaco.editor.getModelMarkers({ owner: LINT_OWNER, resource: f.model.uri })){
+        if (m.severity === monaco.MarkerSeverity.Error) e++;
+        else if (m.severity === monaco.MarkerSeverity.Warning) w++;
+      }
     }
   }
   spErr.textContent = String(e);
   spWarn.textContent = String(w);
   stProb.hidden = e === 0 && w === 0;
+  const total = e + w;
+  pnBadge.hidden = total === 0;
+  pnBadge.textContent = String(total > 99 ? '99+' : total);
+  pnBadge.classList.toggle('warn', e === 0 && w > 0);
+  if (S.panelTab === 'problems') renderProblems();
+}
+
+function renderProblems(){
+  pbList.textContent = '';
+  if (!window.monaco){ pbList.appendChild(h('div', 'pb-empty', 'Python Runtime Is Still Loading…')); return; }
+  let any = false;
+  for (const f of S.files){
+    if (!f.model || f.model.isDisposed()) continue;
+    const ms = monaco.editor.getModelMarkers({ owner: LINT_OWNER, resource: f.model.uri })
+      .sort((a, b) => a.startLineNumber - b.startLineNumber || a.startColumn - b.startColumn);
+    if (!ms.length) continue;
+    any = true;
+    const head = h('div', 'pb-file');
+    head.innerHTML = ICONS.python;
+    head.appendChild(h('span', 'pf-name', f.name));
+    head.appendChild(h('span', 'pf-n', String(ms.length)));
+    pbList.appendChild(head);
+    for (const m of ms){
+      const isErr = m.severity === monaco.MarkerSeverity.Error;
+      const row = h('div', 'pb-row');
+      const ic = h('span', 'pb-ic ' + (isErr ? 'err' : 'warn'));
+      ic.innerHTML = isErr ? ICONS.circleX : ICONS.triangle;
+      row.appendChild(ic);
+      row.appendChild(h('span', 'pb-msg', m.message));
+      row.appendChild(h('span', 'pb-pos', 'Ln ' + m.startLineNumber + ', Col ' + m.startColumn));
+      row.title = m.message;
+      row.addEventListener('click', () => {
+        switchTo(f.id);
+        editor.revealLineInCenter(m.startLineNumber);
+        editor.setSelection(new monaco.Range(m.startLineNumber, m.startColumn, m.startLineNumber, Math.max(m.endColumn, m.startColumn + 1)));
+        editor.setPosition({ lineNumber: m.startLineNumber, column: m.startColumn });
+        editor.focus();
+        flashLineAs(m.startLineNumber, 'err-flash');
+      });
+      pbList.appendChild(row);
+    }
+  }
+  if (!any) pbList.appendChild(h('div', 'pb-empty', 'No Problems Detected — Lint Runs As You Type'));
 }
 
 function nextProblem(back){
@@ -75,6 +120,7 @@ function nextProblem(back){
 }
 
 stProb.addEventListener('click', () => nextProblem(false));
+$('ptab-problems').addEventListener('click', () => { if (!S.prefs.console) toggleConsole(true); });
 
 async function profileFile(){
   const f = activeFile();

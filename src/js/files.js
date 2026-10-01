@@ -42,6 +42,7 @@ function renameFile(f, name){
 }
 
 function startRename(f){
+  if (S.view !== 'files') setView('files');
   renderSidebar();
   const li = fileListEl.querySelector('.fi[data-id="' + f.id + '"]');
   if (!li) return;

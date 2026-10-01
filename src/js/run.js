@@ -76,7 +76,10 @@ function toggleConsole(force){
   app.classList.toggle('no-console', !S.prefs.console);
   savePrefs();
 }
-function openConsole(){ if (!S.prefs.console) toggleConsole(true); }
+function openConsole(){
+  if (S.panelTab !== 'console') setPanelTab('console');
+  if (!S.prefs.console) toggleConsole(true);
+}
 
 function setConH(px){
   const max = Math.max(160, Math.floor(window.innerHeight * 0.7));
@@ -96,6 +99,11 @@ function restartRuntime(){ saveWS(); location.reload(); }
 $('btn-sidebar').addEventListener('click', () => toggleSidebar());
 $('sb-scrim').addEventListener('click', () => toggleSidebar(false));
 $('btn-console').addEventListener('click', () => toggleConsole());
+btnRunsel.addEventListener('click', runSelection);
+btnEdmenu.addEventListener('click', e => {
+  const r = btnEdmenu.getBoundingClientRect();
+  editorActionsMenu(r.left, r.bottom + 4);
+});
 $('btn-newfile').addEventListener('click', newFile);
 $('btn-newtab').addEventListener('click', newFile);
 $('es-new').addEventListener('click', newFile);

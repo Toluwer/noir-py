@@ -17,24 +17,31 @@
 
   <header id="topbar">
     <div class="tb-left">
-      <button id="btn-sidebar" class="icon-btn" title="Toggle Sidebar" data-ic="panelLeft"></button>
       <div class="brand">
         <span class="brand-name">noir<span>.py</span></span>
       </div>
+      <nav id="menubar" aria-label="Menu Bar">
+        <button class="menu-btn" data-menu="file" aria-haspopup="menu">File</button>
+        <button class="menu-btn" data-menu="edit" aria-haspopup="menu">Edit</button>
+        <button class="menu-btn" data-menu="view" aria-haspopup="menu">View</button>
+        <button class="menu-btn" data-menu="go" aria-haspopup="menu">Go</button>
+        <button class="menu-btn" data-menu="run" aria-haspopup="menu">Run</button>
+        <button class="menu-btn" data-menu="tools" aria-haspopup="menu">Tools</button>
+        <button class="menu-btn" data-menu="help" aria-haspopup="menu">Help</button>
+      </nav>
     </div>
 
-    <nav id="menubar" aria-label="Menu Bar">
-      <button class="menu-btn" data-menu="file" aria-haspopup="menu">File</button>
-      <button class="menu-btn" data-menu="edit" aria-haspopup="menu">Edit</button>
-      <button class="menu-btn" data-menu="view" aria-haspopup="menu">View</button>
-      <button class="menu-btn" data-menu="run" aria-haspopup="menu">Run</button>
-      <button class="menu-btn" data-menu="tools" aria-haspopup="menu">Tools</button>
-      <button class="menu-btn" data-menu="help" aria-haspopup="menu">Help</button>
-    </nav>
+    <div class="tb-center">
+      <button id="cmd-center" title="Search Files And Commands (Ctrl+K)">
+        <span class="cc-ic" data-ic="search"></span>
+        <span class="cc-label">Search Files And Commands</span>
+        <span class="cc-kbd" id="cc-kbd">Ctrl K</span>
+      </button>
+    </div>
 
     <div class="tb-right">
-      <button id="btn-console" class="icon-btn" title="Toggle Console" data-ic="panelBottom"></button>
-      <button id="btn-palette" class="icon-btn" title="Command Palette" data-ic="command"></button>
+      <button id="btn-sidebar" class="icon-btn" title="Toggle Sidebar (Ctrl+B)" data-ic="panelLeft"></button>
+      <button id="btn-console" class="icon-btn" title="Toggle Panel (Ctrl+J)" data-ic="panelBottom"></button>
       <div class="tb-div"></div>
       <button id="btn-run" disabled title="Run File (Ctrl+Enter)">
         <span id="run-ic" class="run-ic" data-ic="playLine"></span>
@@ -45,22 +52,25 @@
 
   <div id="main">
 
-    <div id="sb-zone">
     <nav id="rail" aria-label="Views">
-      <button id="rail-files" class="rail-btn active" title="Explorer" data-ic="fileCode"></button>
-      <button id="rail-search" class="rail-btn" title="Search Across Files (Ctrl+Shift+F)" data-ic="search"></button>
-      <button id="rail-vars" class="rail-btn" title="Variables (After A Run)" data-ic="activity"></button>
-      <button id="rail-plots" class="rail-btn" title="Plots (Matplotlib Figures)" data-ic="chart"></button>
-      <button id="rail-hist" class="rail-btn" title="File History" data-ic="history"></button>
+      <div class="rail-top">
+        <button id="rail-files" class="rail-btn active" title="Explorer" data-ic="fileCode"></button>
+        <button id="rail-search" class="rail-btn" title="Search Across Files (Ctrl+Shift+F)" data-ic="search"></button>
+        <button id="rail-plots" class="rail-btn" title="Plots (Matplotlib Figures)" data-ic="chart"></button>
+        <button id="rail-hist" class="rail-btn" title="File History" data-ic="history"></button>
+      </div>
+      <div class="rail-foot">
+        <button id="rail-ghost" class="rail-btn" title="Ghost Text" data-ic="wand"></button>
+        <button id="rail-theme" class="rail-btn" title="Theme — Paper / Ink" data-ic="moon"></button>
+      </div>
     </nav>
 
+    <div id="sb-zone">
     <aside id="sidebar">
       <div class="sb-head">
         <span class="micro" id="sb-title">Explorer</span>
         <div class="sb-actions">
           <span class="sb-tag" id="hv-name" hidden></span>
-          <span class="sb-tag" id="vv-count" hidden></span>
-          <button id="vv-refresh" class="icon-btn sm" title="Refresh Variables" data-ic="rotate" hidden></button>
           <button id="pv-clear" class="icon-btn sm" title="Clear Plots" data-ic="trash" hidden></button>
           <button id="btn-newfile" class="icon-btn sm" title="New File" data-ic="plus"></button>
         </div>
@@ -82,10 +92,6 @@
         <div id="sr-results"></div>
       </div>
 
-      <div id="view-vars" hidden>
-        <div id="vv-list"></div>
-      </div>
-
       <div id="view-plots" hidden>
         <div id="pv-list"></div>
       </div>
@@ -99,7 +105,16 @@
     <div id="sb-scrim"></div>
 
     <div id="editor-pane">
-      <div id="tabbar"><div id="tabs"></div><button id="btn-newtab" class="icon-btn sm" title="New File" data-ic="plus"></button></div>
+      <div id="tabbar">
+        <div id="tabs"></div>
+        <button id="btn-newtab" class="icon-btn sm" title="New File" data-ic="plus"></button>
+        <div class="tb-cluster">
+          <button id="btn-runsel" class="icon-btn" disabled title="Run Selection Or Line (Ctrl+Shift+Enter)" data-ic="runSel"></button>
+          <button id="btn-edmenu" class="icon-btn" title="More Editor Actions" data-ic="ellipses"></button>
+        </div>
+      </div>
+
+      <div id="crumbsbar" hidden><div id="crumbs"></div></div>
 
       <div id="editor-host">
         <div id="editor"></div>
@@ -131,19 +146,26 @@
           <div class="es-title">No File Open</div>
           <div class="es-sub">Create A File To Start Coding</div>
           <button id="es-new" class="es-btn"><span data-ic="plus"></span>New File</button>
-          <div class="es-hints"><span>Command Palette — Top Right</span><span class="es-dot"></span><span>Drop A .py File To Open</span></div>
+          <div class="es-hints"><span>Command Palette — Ctrl K</span><span class="es-dot"></span><span>Drop A .py File To Open</span></div>
         </div>
       </div>
 
-      <div id="console-zone">
+      <div id="panel-zone">
         <div id="console-grip" title="Drag To Resize — Double-Click To Hide"></div>
-        <section id="console">
-          <div class="con-head">
-            <div class="con-title"><span data-ic="terminal"></span><span>Console</span></div>
-            <div class="con-actions">
-              <button id="btn-restart" class="icon-btn sm" title="Restart Runtime (Clears Variables)" data-ic="rotate"></button>
-              <button id="btn-clear" class="icon-btn sm" title="Clear Console (Ctrl+L)" data-ic="eraser"></button>
-              <button id="btn-concollapse" class="icon-btn sm" title="Hide Console (Ctrl+J)" data-ic="chevDown"></button>
+        <section id="panel">
+          <div class="pn-head">
+            <div class="pn-tabs" role="tablist">
+              <button class="ptab active" id="ptab-console" data-ptab="console" type="button" role="tab"><span class="micro">Console</span></button>
+              <button class="ptab" id="ptab-problems" data-ptab="problems" type="button" role="tab"><span class="micro">Problems</span><span class="pn-badge" id="pn-badge" hidden></span></button>
+              <button class="ptab" id="ptab-vars" data-ptab="vars" type="button" role="tab"><span class="micro">Variables</span></button>
+            </div>
+            <div class="pn-actions">
+              <span class="sb-tag" id="vv-count" hidden></span>
+              <button id="vv-refresh" class="icon-btn sm" title="Refresh Variables" data-ic="rotate" hidden></button>
+              <button id="btn-restart" class="icon-btn sm" title="Restart Runtime (Clears Variables)" data-ic="rotate" hidden></button>
+              <button id="btn-clear" class="icon-btn sm" title="Clear Console (Ctrl+L)" data-ic="eraser" hidden></button>
+              <span class="pn-div"></span>
+              <button id="btn-concollapse" class="icon-btn sm" title="Hide Panel (Ctrl+J)" data-ic="chevDown"></button>
             </div>
           </div>
           <div id="con-body">
@@ -155,6 +177,8 @@
               <input id="repl-field" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Python Console">
             </div>
           </div>
+          <div id="view-problems" hidden><div id="pb-list"></div></div>
+          <div id="view-vars" hidden><div id="vv-list"></div></div>
         </section>
       </div>
     </div>
@@ -177,10 +201,6 @@
       <button class="st-btn" id="st-font" title="Reset Font Size">13.5 px</button>
       <span class="st-sep"></span>
       <button class="st-btn" id="st-py" hidden title="Python Version">Python</button>
-      <span class="st-sep"></span>
-      <button class="st-btn" id="st-ai" title="Ghost Text — Inline Suggestions">Ghost: Local</button>
-      <span class="st-sep"></span>
-      <button class="st-btn" id="st-theme" title="Theme — Paper / Ink">Paper</button>
     </div>
   </footer>
 

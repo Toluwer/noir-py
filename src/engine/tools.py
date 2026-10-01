@@ -184,8 +184,11 @@ def _defaults_mutable(node):
 def _lint(src):
     try:
         tree = ast.parse(src)
-    except BaseException:
-        return '[]'
+    except BaseException as e:
+        line = getattr(e, 'lineno', None) or 1
+        col = getattr(e, 'offset', None) or 1
+        msg = getattr(e, 'msg', None) or str(e) or 'invalid syntax'
+        return json.dumps([{'s': 'error', 'l': line, 'c': col, 'e': col + 1, 'm': 'Syntax Error — ' + msg}])
     diags = []
     star_import = False
     string_words = set()
